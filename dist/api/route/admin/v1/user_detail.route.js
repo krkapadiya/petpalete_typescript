@@ -1,0 +1,24 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const admin_router = express_1.default.Router();
+const multipartMiddleware = require("connect-multiparty")();
+const auth_1 = require("../../../middlewares/auth");
+const validation_1 = require("../../../middlewares/validation");
+const user_detail_controller_1 = require("./../../../controller/admin/v1/user_detail.controller");
+const user_detail_dto_1 = require("../../../dto/admin/v1/user_detail_dto");
+admin_router.post("/all_user_list", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(user_detail_dto_1.allUserListDto), user_detail_controller_1.allUserList);
+admin_router.post("/user_detail", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(user_detail_dto_1.userDetailsDto), user_detail_controller_1.userDetails);
+admin_router.post("/block_unblock_user", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(user_detail_dto_1.blockUnblockUserDto), user_detail_controller_1.blockUnblockUser);
+admin_router.post("/user_pets", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(user_detail_dto_1.userPetsDto), user_detail_controller_1.userPets);
+admin_router.post("/user_pets_favorites", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(user_detail_dto_1.userPetFavoritesDto), user_detail_controller_1.userPetFavorites);
+admin_router.post("/user_services", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(user_detail_dto_1.userServicesDto), user_detail_controller_1.userServices);
+admin_router.post("/user_services_favorites", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(user_detail_dto_1.userServiceFavoritesDto), user_detail_controller_1.userServiceFavorites);
+admin_router.post("/user_communities", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(user_detail_dto_1.userCommunitiesDto), user_detail_controller_1.userCommunities);
+admin_router.post("/user_reviews", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(user_detail_dto_1.userReviewsDto), user_detail_controller_1.userReviews);
+admin_router.post("/user_payment_list", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(user_detail_dto_1.paymentListDto), user_detail_controller_1.paymentList);
+admin_router.post("/all_payments", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(user_detail_dto_1.allPaymentsDto), user_detail_controller_1.allPayments);
+exports.default = admin_router;

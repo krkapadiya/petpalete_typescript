@@ -1,0 +1,25 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const app_router = express_1.default.Router();
+const connect_multiparty_1 = __importDefault(require("connect-multiparty"));
+const multipartMiddleware = (0, connect_multiparty_1.default)();
+const validation_1 = require("../../../middlewares/validation");
+const auth_1 = require("../../../middlewares/auth");
+const community_controller_1 = require("../../../controller/app/v1/community.controller");
+const community_dto_1 = require("../../../dto/app/v1/community_dto");
+app_router.post("/add-community", auth_1.userAuth, multipartMiddleware, (req, res) => (0, community_controller_1.addCommunity)(req, res));
+app_router.post("/add_multiple_community", auth_1.userAuth, multipartMiddleware, (req, res) => (0, community_controller_1.addMultipleServices)(req, res));
+app_router.post("/edit_community", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(community_dto_1.editCommunityDto), (req, res) => (0, community_controller_1.editCommunity)(req, res));
+app_router.post("/delete_community", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(community_dto_1.deleteCommunityDto), (req, res) => (0, community_controller_1.deleteCommunity)(req, res));
+app_router.post("/upload_community_media", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(community_dto_1.uploadCommunityMediaDto), (req, res) => (0, community_controller_1.uploadCommunityMedia)(req, res));
+app_router.post("/remove_community_media", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(community_dto_1.removeCommunityMediaDto), (req, res) => (0, community_controller_1.removeCommunityMedia)(req, res));
+app_router.post("/community_detail", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(community_dto_1.communityDetailsDto), community_controller_1.communityDetails);
+app_router.post("/get_community_data", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(community_dto_1.communityUpdatedDataDto), community_controller_1.communityUpdatedData);
+app_router.post("/community_list", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(community_dto_1.communityListingDto), (req, res) => (0, community_controller_1.communityListing)(req, res));
+app_router.post("/guest_community_list", multipartMiddleware, (0, validation_1.validateRequest)(community_dto_1.guestCommunityListingDto), community_controller_1.guestCommunityListing);
+app_router.post("/user_community_list", multipartMiddleware, (0, validation_1.validateRequest)(community_dto_1.userCommunityListingDto), community_controller_1.userCommunityListing);
+exports.default = app_router;

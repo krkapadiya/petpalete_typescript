@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "typeRoots": ["./src/types", "./node_modules/@types"],
+    "types": [],
+    "target": "ES6", // Specify the target JavaScript version (ES6)
+    "module": "commonjs", // Use CommonJS module system
+    "rootDir": "./src", // Root directory for your source code
+    "outDir": "./dist", // Output directory for compiled JavaScript files
+    "strict": true, // Enable all strict type-checking options
+    "esModuleInterop": true, // Enables default imports for modules without default exports
+    "forceConsistentCasingInFileNames": true, // Enforce consistent casing in file names
+    "moduleResolution": "node", // Use Node.js module resolution
+    "resolveJsonModule": true, // Allow importing JSON files as modules
+    "strictNullChecks": true, // Enable strict null checks
+    "noImplicitAny": true, // Raise error on expressions and declarations with an implied 'any' type
+    // "allowJs": true, // Allow JavaScript files to be compiled
+    "noImplicitThis": true, // Raise error on 'this' expressions that have an implicit 'any' type
+    "strictFunctionTypes": true, // Enforce stricter checking of function types
+    "noUncheckedIndexedAccess": true, // Ensure that indexing into arrays or objects is properly checked
+    "noImplicitReturns": true, // Ensure all functions have a return type or throw an error if not
+    "noFallthroughCasesInSwitch": true, // Prevent fall-through behavior in switch statements
+    "experimentalDecorators": true, // Enables TypeScript decorator syntax (@Service(), @Inject(), etc.)
+    "emitDecoratorMetadata": true, // Makes TypeScript emit type information that TypeDI uses for dependency injection
+    "skipLibCheck": true
+    // "incremental": true
+  },
+  "include": ["src"], // Include the source files in the 'src' directory
+  "exclude": ["node_modules", "dist"] // Exclude 'node_modules' and 'dist' directories
+}

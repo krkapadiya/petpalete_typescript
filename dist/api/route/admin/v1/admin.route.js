@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const admin_router = express_1.default.Router();
+const multipartMiddleware = require("connect-multiparty")();
+const auth_1 = require("../../../middlewares/auth");
+const validation_1 = require("../../../middlewares/validation");
+const admin_controller_1 = require("../../../controller/admin/v1/admin.controller");
+const admin_dto_1 = require("./../../../dto/admin/v1/admin_dto");
+admin_router.post("/sign_up", multipartMiddleware, (0, validation_1.validateRequest)(admin_dto_1.adminSignUpDto), admin_controller_1.adminSignUp);
+admin_router.post("/sign_in", multipartMiddleware, (0, validation_1.validateRequest)(admin_dto_1.adminSignInDto), admin_controller_1.adminSignIn);
+admin_router.post("/change_password", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(admin_dto_1.adminChangePasswordDto), admin_controller_1.adminChangePassword);
+admin_router.post("/send_otp_forgot_password", multipartMiddleware, (0, validation_1.validateRequest)(admin_dto_1.adminSendOtpForgotPasswordDto), admin_controller_1.adminSendOtpForgotPassword);
+admin_router.post("/verify_otp", multipartMiddleware, (0, validation_1.validateRequest)(admin_dto_1.adminVerifyOtpDto), admin_controller_1.adminVerifyOtp);
+admin_router.post("/reset_password", multipartMiddleware, (0, validation_1.validateRequest)(admin_dto_1.adminResetPasswordDto), admin_controller_1.adminResetPassword);
+admin_router.post("/logout", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(admin_dto_1.adminLogoutDto), admin_controller_1.adminLogout);
+admin_router.post("/dashboard", auth_1.userAuth, multipartMiddleware, (0, validation_1.validateRequest)(admin_dto_1.dashboardDto), admin_controller_1.dashboard);
+exports.default = admin_router;
