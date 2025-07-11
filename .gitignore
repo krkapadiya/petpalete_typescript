@@ -1,4 +1,19 @@
+# Node.js
 node_modules/
 .env
 serviceAccount.json
 
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / Editor stuff
+.DS_Store
+*.swp
+.vscode/
+
+# Coverage
+coverage/
