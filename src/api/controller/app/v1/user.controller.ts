@@ -1493,10 +1493,10 @@ export const addReview = async (req: Request, res: Response): Promise<void> => {
         return;
       }
       const userAlbumData = await findUserAlbum(String(userObjectId));
-      let noti_msg = `"${newReview.review}" - You received a ${newReview.rating} - star review from ${userData.full_name}`;
-      let noti_title = "New Review Received";
-      let noti_for = "new_review";
-      let noti_image = ((process.env.BUCKET_URL as string) +
+      const noti_msg = `"${newReview.review}" - You received a ${newReview.rating} - star review from ${userData.full_name}`;
+      const noti_title = "New Review Received";
+      const noti_for = "new_review";
+      const noti_image = ((process.env.BUCKET_URL as string) +
         userAlbumData) as string;
 
       const deviceTokenData = await findDeviceToken(String(otherUserObjectId));
@@ -1758,7 +1758,7 @@ export const userReviewList = async (
       },
     ]);
 
-    let result_count = await user_reviews.countDocuments({
+    const result_count = await user_reviews.countDocuments({
       reviewed_user_id: reviewObjectId,
     });
 
@@ -1919,7 +1919,7 @@ export const uploadSocketMedia = async (
         if (album_type_i == "image") {
           const file_name = res_upload_file.file_name;
           const user_image_path = `${folder_name}/${file_name}`;
-          let thumbnail_image_path = null;
+          const thumbnail_image_path = null;
 
           uploadedFiles.push({
             file_type: album_type_i,
@@ -2146,9 +2146,9 @@ export const addPayment = async (
         return;
       }
 
-      let noti_msg = `Your pet "${find_pet.pet_name}" is now live and visible to others!`;
-      let noti_title = "Listing Published";
-      let noti_for = "pet_published";
+      const noti_msg = `Your pet "${find_pet.pet_name}" is now live and visible to others!`;
+      const noti_title = "Listing Published";
+      const noti_for = "pet_published";
 
       notiData = {
         noti_msg,

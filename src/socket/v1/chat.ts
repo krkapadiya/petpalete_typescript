@@ -139,26 +139,26 @@ export interface changeScreenStatusData {
 
 export const createRoom = async (data: CreateRoomData) => {
   try {
-    let { user_id, other_user_id, ln = "en" } = data;
+    const { user_id, other_user_id, ln = "en" } = data;
 
     i18n.setLocale(ln);
 
-    let userObjectId = new mongoose.Types.ObjectId(user_id);
-    let otherUserObjectId = new mongoose.Types.ObjectId(other_user_id);
+    const userObjectId = new mongoose.Types.ObjectId(user_id);
+    const otherUserObjectId = new mongoose.Types.ObjectId(other_user_id);
 
-    let cond1 = {
+    const cond1 = {
       user_id: userObjectId,
       other_user_id: otherUserObjectId,
       is_deleted: false,
     };
 
-    let cond2 = {
+    const cond2 = {
       user_id: otherUserObjectId,
       other_user_id: userObjectId,
       is_deleted: false,
     };
 
-    let findRoom = await chat_rooms.findOne({
+    const findRoom = await chat_rooms.findOne({
       $or: [cond1, cond2],
     });
 
@@ -167,7 +167,7 @@ export const createRoom = async (data: CreateRoomData) => {
     if (findRoom) {
       chat_room_id = findRoom._id;
 
-      let findChatDeleteByUser = await chat_rooms.findOne({
+      const findChatDeleteByUser = await chat_rooms.findOne({
         _id: findRoom._id,
         is_delete_by: { $eq: user_id },
       });
@@ -182,12 +182,12 @@ export const createRoom = async (data: CreateRoomData) => {
         );
       }
     } else {
-      let createData = {
+      const createData = {
         user_id: userObjectId,
         other_user_id: otherUserObjectId,
       };
 
-      let createNewRoom = await chat_rooms.create(createData);
+      const createNewRoom = await chat_rooms.create(createData);
 
       chat_room_id = createNewRoom._id;
     }
@@ -547,7 +547,7 @@ export const createRoom = async (data: CreateRoomData) => {
 
 export const sendMessage = async (data: SendMessageData) => {
   try {
-    let {
+    const {
       sender_id,
       chat_room_id,
       receiver_id,
@@ -576,7 +576,7 @@ export const sendMessage = async (data: SendMessageData) => {
       message_type: message_type,
     };
 
-    let media_file_array: MediaFileData[] = [];
+    const media_file_array: MediaFileData[] = [];
 
     if (message_type == "media") {
       for (const value of media_file) {
@@ -598,7 +598,7 @@ export const sendMessage = async (data: SendMessageData) => {
       };
     }
 
-    let receiverIsOnline = await user_sessions.findOne({
+    const receiverIsOnline = await user_sessions.findOne({
       user_id: receiver_id,
       is_active: true,
       chat_room_id: chat_room_id,
@@ -621,7 +621,7 @@ export const sendMessage = async (data: SendMessageData) => {
     }
 
     if (!receiverIsOnline) {
-      let noti_title = (findSender as IUser).full_name || "";
+      const noti_title = (findSender as IUser).full_name || "";
 
       let noti_msg;
 
@@ -631,7 +631,7 @@ export const sendMessage = async (data: SendMessageData) => {
         noti_msg = message;
       }
 
-      let noti_for = "chat_notification";
+      const noti_for = "chat_notification";
 
       let notiData: NotiData = {
         device_token: [],
@@ -644,11 +644,11 @@ export const sendMessage = async (data: SendMessageData) => {
         sound_name: "default",
       };
 
-      let findDeviceTokens = await user_sessions.find({
+      const findDeviceTokens = await user_sessions.find({
         user_id: receiver_id,
       });
 
-      let deviceTokenArray = findDeviceTokens.map((row) => row.device_token);
+      const deviceTokenArray = findDeviceTokens.map((row) => row.device_token);
 
       if (deviceTokenArray.length > 0) {
         notiData = { ...notiData, device_token: deviceTokenArray };
@@ -656,7 +656,7 @@ export const sendMessage = async (data: SendMessageData) => {
         incNotificationBadge(receiver_id);
       }
 
-      let inAppNotificationData = {
+      const inAppNotificationData = {
         sender_id: sender_id,
         receiver_id: receiver_id,
         chat_room_id: chat_room_id,
@@ -739,7 +739,7 @@ export const sendMessage = async (data: SendMessageData) => {
       },
     ]);
 
-    let findChatDeleteByUser = await chat_rooms.findOne({
+    const findChatDeleteByUser = await chat_rooms.findOne({
       _id: chat_room_id,
       $or: [
         { is_delete_by: { $eq: receiver_id } },
@@ -767,7 +767,7 @@ export const sendMessage = async (data: SendMessageData) => {
 export const getAllMessage = async (data: getAllMessageData) => {
   try {
     const { chat_room_id, user_id, page = 1, limit = 10, ln = "en" } = data;
-    
+
     i18n.setLocale(ln);
 
     const chatRoomObjectId = new mongoose.Types.ObjectId(chat_room_id);
@@ -948,7 +948,7 @@ export const deleteMessage = async (data: deleteMessageData) => {
       return socketErrorRes(i18n.__("Message not find"));
     }
 
-    let delete_data = { is_delete_by: user_id };
+    const delete_data = { is_delete_by: user_id };
 
     await chats
       .updateOne({ _id: find_message._id }, { $push: delete_data })
@@ -963,7 +963,7 @@ export const deleteMessage = async (data: deleteMessageData) => {
             if (media.thumbnail_name) {
               await removeMediaFromS3Bucket(media.thumbnail_name);
             }
-            let file_name = `socket_media/${media.file_name}`;
+            const file_name = `socket_media/${media.file_name}`;
             await removeMediaFromS3Bucket(file_name);
           } catch (error) {
             console.log("failed to delete media from s3", error);
@@ -1019,7 +1019,7 @@ export const deleteMessageForEveryOne = async (data: deleteMessageData) => {
             if (media.thumbnail_name) {
               await removeMediaFromS3Bucket(media.thumbnail_name);
             }
-            let file_name = `socket_media/${media.file_name}`;
+            const file_name = `socket_media/${media.file_name}`;
             await removeMediaFromS3Bucket(file_name);
           } catch (error) {
             console.log("failed to delete media from s3", error);
@@ -1108,7 +1108,7 @@ export const chatUserList = async (data: chatUserListData) => {
 
     const userObjectId = new mongoose.Types.ObjectId(user_id);
 
-    let matchCondition = {
+    const matchCondition = {
       $or: [{ user_id: userObjectId }, { other_user_id: userObjectId }],
       is_delete_by: { $ne: new mongoose.Types.ObjectId(user_id) },
       is_deleted: false,
@@ -1359,7 +1359,7 @@ export const updatedChatRoomData = async (data: updatedChatRoom) => {
     const userObjectId = new mongoose.Types.ObjectId(user_id);
     const chatObjectId = new mongoose.Types.ObjectId(chat_room_id);
 
-    let matchCondition = {
+    const matchCondition = {
       _id: chatObjectId,
       is_deleted: false,
     };
@@ -1588,7 +1588,7 @@ export const deleteChatRoom = async (data: deleteChatRoomData) => {
       return socketErrorRes(i18n.__("Message not find"));
     }
 
-    let delete_data = { is_delete_by: user_id };
+    const delete_data = { is_delete_by: user_id };
 
     await chats
       .updateMany({ chat_room_id: chat_room_id }, { $push: delete_data })
@@ -1612,9 +1612,9 @@ export const deleteChatRoom = async (data: deleteChatRoomData) => {
 
 export const changeScreenStatus = async (data: changeScreenStatusData) => {
   try {
-    let { user_id, screen_status, chat_room_id, socket_id } = data;
+    const { user_id, screen_status, chat_room_id, socket_id } = data;
 
-    let find_chat_room = await chat_rooms.findOne({
+    const find_chat_room = await chat_rooms.findOne({
       _id: chat_room_id,
       is_deleted: false,
     });

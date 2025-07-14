@@ -1,0 +1,28 @@
+{
+  "env": {
+    "browser": false,
+    "node": true,
+    "es2021": true
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["@typescript-eslint", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": ["error"],
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "no-console": "error",
+    "eqeqeq": ["error", "always"],
+    "prettier/prettier": "error",
+    "strict": ["error", "global"]
+  },
+  "ignorePatterns": ["dist", "node_modules"] // ✅ Ignore dist/ explicitly
+}

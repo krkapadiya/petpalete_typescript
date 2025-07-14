@@ -108,9 +108,9 @@ export const addService = async (
         nearUserIds as string[],
       );
 
-      let noti_msg = `A new ${newService.service_name} is now available in your area!`;
-      let noti_title = "New Service Nearby";
-      let noti_for = "new_service";
+      const noti_msg = `A new ${newService.service_name} is now available in your area!`;
+      const noti_title = "New Service Nearby";
+      const noti_for = "new_service";
 
       notiData = {
         noti_msg,

@@ -56,7 +56,7 @@ export const appVersionCheck = async (
 
     i18n.setLocale(req, ln);
 
-    let result: {
+    const result: {
       is_need_update?: boolean;
       is_force_update?: boolean;
       is_maintenance?: boolean;

@@ -30,7 +30,7 @@ export const allUserList = async (
   res: Response,
 ): Promise<void> => {
   try {
-    let { search = "", page = 1, limit = 10, ln } = req.body;
+    const { search = "", page = 1, limit = 10, ln } = req.body;
     i18n.setLocale(req, ln);
 
     const escapedSearch = search ? await escapeRegex(search) : null;
@@ -191,7 +191,7 @@ export const userDetails = async (
   res: Response,
 ): Promise<void> => {
   try {
-    let { user_id, ln } = req.body;
+    const { user_id, ln } = req.body;
     i18n.setLocale(req, ln);
 
     const userObjectId = await objectId(user_id);
@@ -295,7 +295,7 @@ export const blockUnblockUser = async (
     const { block_user_id, is_block, ln } = req.body;
     i18n.setLocale(req, ln);
 
-    let find_user = await findUser(block_user_id);
+    const find_user = await findUser(block_user_id);
 
     if (!find_user) {
       await errorRes(res, res.__("User not found."));
@@ -303,7 +303,7 @@ export const blockUnblockUser = async (
     }
 
     if (is_block == true || is_block == "true") {
-      let find_block = await findBlockUser(block_user_id);
+      const find_block = await findBlockUser(block_user_id);
 
       if (find_block) {
         await successRes(res, "User has been successfully blocked.", []);
@@ -1177,7 +1177,7 @@ export const allPayments = async (
     } = req.body;
     i18n.setLocale(req, ln);
 
-    let query: Record<string, any> = {};
+    const query: Record<string, any> = {};
 
     if (fromDate && toDate) {
       query.payment_date = {

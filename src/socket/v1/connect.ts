@@ -40,7 +40,6 @@ export interface ChangeScreenStatusParamsData {
 export const setSocketId = async (data: SetSocketIdData) => {
   try {
     const { user_id, device_token, socket_id, ln = "en" } = data;
-  
 
     i18n.setLocale(ln);
 
@@ -51,9 +50,8 @@ export const setSocketId = async (data: SetSocketIdData) => {
       device_token: device_token,
     });
     console.log("Matched session:", match);
-    
 
-    if (user) { 
+    if (user) {
       await user_sessions.updateOne(
         {
           user_id: new mongoose.Types.ObjectId(user_id),
@@ -88,25 +86,25 @@ export const disconnectSocket = async (
   v1version: any,
 ) => {
   try {
-    let { socket_id, ln = "en" } = data;
+    const { socket_id, ln = "en" } = data;
 
     i18n.setLocale(ln);
 
-    let findUserSession = await user_sessions.findOne({
+    const findUserSession = await user_sessions.findOne({
       socket_id: socket_id,
     });
 
     console.log({ findUserSession });
 
     if (findUserSession) {
-      let findUser = await users.findOne({
+      const findUser = await users.findOne({
         _id: findUserSession.user_id,
         is_deleted: false,
       });
       console.log({ findUser });
 
       if (findUser) {
-        let user_id = findUser._id;
+        const user_id = findUser._id;
         await user_sessions.updateOne(
           {
             _id: findUserSession._id,
@@ -122,13 +120,13 @@ export const disconnectSocket = async (
         );
 
         if (findUserSession.chat_room_id != null) {
-          let findChatRoom = await chat_rooms.findOne({
+          const findChatRoom = await chat_rooms.findOne({
             _id: findUserSession.chat_room_id,
             is_deleted: false,
           });
 
           if (findChatRoom) {
-            let userIsOnlineInChatRoom = await user_sessions.find({
+            const userIsOnlineInChatRoom = await user_sessions.find({
               user_id: findUser._id,
               chat_room_id: findChatRoom._id,
               socket_id: { $ne: socket_id },
@@ -136,14 +134,14 @@ export const disconnectSocket = async (
             });
 
             if (userIsOnlineInChatRoom.length == 0) {
-              let changeStatusData = {
+              const changeStatusData = {
                 chat_room_id: findChatRoom._id as unknown as string,
                 screen_status: false,
                 user_id: findUser._id as unknown as string,
                 socket_id: socket_id,
               } as ChangeScreenStatusParamsData;
 
-              let changeScreenStatusData = await changeScreenStatus({
+              const changeScreenStatusData = await changeScreenStatus({
                 ...changeStatusData,
                 ln: "en",
               });
@@ -157,7 +155,7 @@ export const disconnectSocket = async (
           }
         }
 
-        let userIsOnline = await user_sessions.find({
+        const userIsOnline = await user_sessions.find({
           user_id: findUser._id,
           is_active: true,
         });
@@ -193,18 +191,18 @@ export const disconnectSocket = async (
 
 export const checkUserIsOnline = async (data: checkUserIsOnlineData) => {
   try {
-    let { user_id, ln = "en" } = data;
+    const { user_id, ln = "en" } = data;
 
     i18n.setLocale(ln);
 
-    let findUser = await users.findOne({
+    const findUser = await users.findOne({
       _id: user_id,
       is_deleted: false,
       is_self_delete: false,
     });
 
     if (findUser) {
-      let userIsOnline = await user_sessions.find({
+      const userIsOnline = await user_sessions.find({
         user_id: findUser._id,
         is_active: true,
       });

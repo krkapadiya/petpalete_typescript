@@ -1,21 +1,59 @@
+import typescriptEslint from "@typescript-eslint/eslint-plugin";
+import prettier from "eslint-plugin-prettier";
 import globals from "globals";
-import pluginJs from "@eslint/js";
+import tsParser from "@typescript-eslint/parser";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import js from "@eslint/js";
+import { FlatCompat } from "@eslint/eslintrc";
 
-/** @type {import('eslint').Linter.Config[]} */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+  allConfig: js.configs.all,
+});
+
 export default [
   {
-    ignores: ["**/node_modules" , "**/dist"],
+    ignores: ["**/dist", "**/node_modules", "**/dist/", "**/node_modules/"],
   },
+  ...compat.extends(
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier",
+  ),
   {
+    plugins: {
+      "@typescript-eslint": typescriptEslint,
+      prettier,
+    },
+
     languageOptions: {
-      globals: globals.node, // Use Node.js globals instead of browser
+      globals: {
+        ...Object.fromEntries(
+          Object.entries(globals.browser).map(([key]) => [key, "off"]),
+        ),
+        ...globals.node,
+      },
+
+      parser: tsParser,
+      ecmaVersion: "latest",
+      sourceType: "module",
+
+      parserOptions: {
+        project: "./tsconfig.json",
+      },
+    },
+
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["error"],
+      "@typescript-eslint/explicit-module-boundary-types": "off",
+      "no-console": "error",
+      eqeqeq: ["error", "always"],
+      "prettier/prettier": "error",
+      strict: ["error", "global"],
     },
   },
-  pluginJs.configs.recommended,
 ];
-
-// npm install --save-dev eslint prettier eslint-plugin-prettier eslint-config-prettier
-
-// "lint": "eslint .",
-// "lint:fix": "eslint . --fix",
-// "format": "prettier --write ."

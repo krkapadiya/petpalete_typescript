@@ -792,7 +792,7 @@ export const communityListing = async (
 
     const escapedSearch = search ? await escapeRegex(search) : null;
 
-    let query: Record<string, any> = {
+    const query: Record<string, any> = {
       is_deleted: false,
       user_id: { $ne: user_id },
     };
@@ -1016,7 +1016,7 @@ export const guestCommunityListing = async (
 
     const escapedSearch = search ? await escapeRegex(search) : null;
 
-    let query: Record<string, any> = {
+    const query: Record<string, any> = {
       is_deleted: false,
     };
 

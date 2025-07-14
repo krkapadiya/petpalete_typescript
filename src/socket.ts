@@ -11,7 +11,7 @@ import socket from "./socket/config/socket";
 
 import { maintenanceMode } from "./util/response_functions";
 
-let isMaintenanceMode = process.env.SOCKET_MAINTENANCE_MODE === "true";
+const isMaintenanceMode = process.env.SOCKET_MAINTENANCE_MODE === "true";
 
 const configureApp = (server: any) => {
   i18n.configure({

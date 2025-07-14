@@ -117,9 +117,9 @@ export const addPet = async (req: Request, res: Response): Promise<void> => {
         nearUserIds as string[],
       );
 
-      let noti_msg = `A new ${newPet.pet_name} is available for adoption near you!`;
-      let noti_title = "New listing Alert!";
-      let noti_for = "new_pet";
+      const noti_msg = `A new ${newPet.pet_name} is available for adoption near you!`;
+      const noti_title = "New listing Alert!";
+      const noti_for = "new_pet";
 
       notiData = {
         noti_msg,

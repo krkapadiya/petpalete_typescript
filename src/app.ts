@@ -10,7 +10,7 @@ import app_router from "./api/route/app/v1/index.route";
 
 import { maintenanceMode } from "./util/response_functions";
 
-let isMaintenanceMode = process.env.APP_MAINTENANCE_MODE === "true";
+const isMaintenanceMode = process.env.APP_MAINTENANCE_MODE === "true";
 
 const configureApp = (server: any) => {
   i18n.configure({
@@ -67,7 +67,7 @@ const configureApp = (server: any) => {
 // Apply shared configuration to app
 configureApp(app);
 
-var APP_PORT = process.env.APP_PORT || 4430;
+const APP_PORT = process.env.APP_PORT || 4430;
 
 const server = http.createServer(app);
 

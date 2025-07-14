@@ -49,7 +49,7 @@ export const allCommunityList = async (
       const maxLong =
         long1 + (radians * (180 / Math.PI)) / Math.cos((lat1 * Math.PI) / 180);
 
-      let query: Record<string, any> = {
+      const query: Record<string, any> = {
         is_deleted: false,
       };
       query.location = {
@@ -77,7 +77,7 @@ export const allCommunityList = async (
       };
     }
 
-    let query: Record<string, any> = {
+    const query: Record<string, any> = {
       is_deleted: false,
     };
 

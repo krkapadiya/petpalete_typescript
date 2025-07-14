@@ -34,7 +34,7 @@ export const allServiceList = async (
 
     const escapedSearch = search ? await escapeRegex(search) : null;
 
-    let query: Record<string, any> = {
+    const query: Record<string, any> = {
       is_deleted: false,
     };
 

@@ -1,5 +1,4 @@
 import i18n from "i18n";
-import express from "express";
 import { Request, Response } from "express";
 import { userToken } from "../../../../util/token";
 import { users } from "../../../model/model.users";

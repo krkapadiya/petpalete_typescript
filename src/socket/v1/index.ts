@@ -41,7 +41,7 @@ import {
 } from "./chat";
 
 export default (io: Server) => {
-  var v1version = io.of("/v1");
+  const v1version = io.of("/v1");
   v1version.use(socketAuth);
   v1version.on("connection", (socket: any) => {
     console.log("Socket connected  v1.....", socket.id);
@@ -94,7 +94,7 @@ export default (io: Server) => {
             socket_id: socket.id,
           };
 
-          let disconnect_user = await disconnectSocket(
+          const disconnect_user = await disconnectSocket(
             data as DisconnectSocketData,
             v1version,
           );
@@ -126,7 +126,7 @@ export default (io: Server) => {
 
         const createRoomData = await createRoom(data as CreateRoomData);
 
-        let { ln = "en" } = data;
+        const { ln = "en" } = data;
         i18n.setLocale(ln);
 
         // socket.join(createRoomData.data._id.toString());
@@ -150,7 +150,7 @@ export default (io: Server) => {
         };
 
         console.log("chatUserList  on :: ", data);
-        let { ln = "en" } = data;
+        const { ln = "en" } = data;
         i18n.setLocale(ln);
 
         socket.join(data.user_id as string);
@@ -175,14 +175,14 @@ export default (io: Server) => {
         };
         console.log("sendMessage  on :: ", data);
 
-        let newMessage = await sendMessage(data as SendMessageData);
+        const newMessage = await sendMessage(data as SendMessageData);
         if (newMessage.success) {
           socket.join(data.chat_room_id as string);
           v1version
             .to(data.chat_room_id as string)
             .emit("sendMessage", newMessage);
 
-          let senderChatListData = await updatedChatRoomData({
+          const senderChatListData = await updatedChatRoomData({
             user_id: data.sender_id as string,
             chat_room_id: data.chat_room_id as string,
           });
@@ -190,7 +190,7 @@ export default (io: Server) => {
             .to(data.sender_id as string)
             .emit("updatedChatRoomData", senderChatListData);
 
-          let receiverChatListData = await updatedChatRoomData({
+          const receiverChatListData = await updatedChatRoomData({
             user_id: data.receiver_id as string,
             chat_room_id: data.chat_room_id as string,
           });
@@ -222,7 +222,7 @@ export default (io: Server) => {
         socket.join(data.chat_room_id);
 
         const find_chats = await getAllMessage(data as getAllMessageData);
-        
+
         v1version.emit("getAllMessage", find_chats);
         return;
       } catch (error) {
@@ -250,7 +250,7 @@ export default (io: Server) => {
             .emit("editMessage", editMessageData);
 
           if (editMessageData.data.isLastMessage) {
-            let senderChatListData = await updatedChatRoomData({
+            const senderChatListData = await updatedChatRoomData({
               user_id: editMessageData.data.sender_id,
               chat_room_id: editMessageData.data.chat_room_id,
             });
@@ -258,7 +258,7 @@ export default (io: Server) => {
               .to(editMessageData.data.sender_id.toString())
               .emit("updatedChatRoomData", senderChatListData);
 
-            let receiverChatListData = await updatedChatRoomData({
+            const receiverChatListData = await updatedChatRoomData({
               user_id: editMessageData.data.receiver_id,
               chat_room_id: editMessageData.data.chat_room_id,
             });
@@ -294,7 +294,7 @@ export default (io: Server) => {
           .emit("readMessage", readMessages);
 
         // socket.to(data.user_id.toString()).emit("msgReadByUser", readMessages);
-        let senderChatListData = await updatedChatRoomData({
+        const senderChatListData = await updatedChatRoomData({
           user_id: data.user_id as string,
           chat_room_id: data.chat_room_id as string,
         });
@@ -329,7 +329,7 @@ export default (io: Server) => {
             .to(data.chat_room_id as string)
             .emit("deleteMessage", deleteMessageData);
 
-          let userChatListData = await updatedChatRoomData({
+          const userChatListData = await updatedChatRoomData({
             user_id: data.user_id as string,
             chat_room_id: data.chat_room_id as string,
           });
@@ -370,7 +370,7 @@ export default (io: Server) => {
               .emit("deleteMessageForEveryOne", deleteMessageForEveryOneData);
 
             if (deleteMessageForEveryOneData.data.isLastMessage) {
-              let senderChatListData = await updatedChatRoomData({
+              const senderChatListData = await updatedChatRoomData({
                 user_id: deleteMessageForEveryOneData.data.sender_id as string,
                 chat_room_id: deleteMessageForEveryOneData.data
                   .chat_room_id as string,
@@ -379,7 +379,7 @@ export default (io: Server) => {
                 .to(deleteMessageForEveryOneData.data.sender_id as string)
                 .emit("updatedChatRoomData", senderChatListData);
 
-              let receiverChatListData = await updatedChatRoomData({
+              const receiverChatListData = await updatedChatRoomData({
                 user_id: deleteMessageForEveryOneData.data
                   .receiver_id as string,
                 chat_room_id: deleteMessageForEveryOneData.data
@@ -444,7 +444,7 @@ export default (io: Server) => {
           };
           console.log(" -----------  changeScreenStatus  -----------  ", data);
 
-          let change_screen_status = await changeScreenStatus(
+          const change_screen_status = await changeScreenStatus(
             data as changeScreenStatusData,
           );
 
