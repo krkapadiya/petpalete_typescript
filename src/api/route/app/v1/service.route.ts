@@ -1,6 +1,6 @@
 import express from "express";
 const service_router = express.Router();
-import multipart = require("connect-multiparty");
+import multipart from "connect-multiparty";
 const multipartMiddleware = multipart();
 import { validateRequest } from "../../../middlewares/validation";
 import { userAuth } from "../../../middlewares/auth";

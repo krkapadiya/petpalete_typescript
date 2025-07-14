@@ -47,7 +47,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const socket_1 = __importDefault(require("./socket/config/socket"));
 const response_functions_1 = require("./util/response_functions");
-let isMaintenanceMode = process.env.SOCKET_MAINTENANCE_MODE === "true";
+const isMaintenanceMode = process.env.SOCKET_MAINTENANCE_MODE === "true";
 const configureApp = (server) => {
     i18n_1.default.configure({
         locales: ["en"],

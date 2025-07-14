@@ -23,7 +23,7 @@ const allServiceList = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const { search = "", page = 1, limit = 10, lat, long, miles_distance = 100, ln, } = req.body;
         i18n_1.default.setLocale(req, ln);
         const escapedSearch = search ? yield (0, user_function_1.escapeRegex)(search) : null;
-        let query = {
+        const query = {
             is_deleted: false,
         };
         if (lat && long) {

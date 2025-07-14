@@ -9,7 +9,6 @@ import { service_likes } from "./../../../model/model.service_likes";
 import { communities } from "./../../../model/model.communities";
 import { user_reviews } from "./../../../model/model.user_reviews";
 import { payments } from "./../../../model/model.payments";
-import { notifications } from "../../../model/model.notifications";
 
 import {
   errorRes,
@@ -302,7 +301,7 @@ export const blockUnblockUser = async (
       return;
     }
 
-    if (is_block == true || is_block == "true") {
+    if (is_block === true || is_block === "true") {
       const find_block = await findBlockUser(block_user_id);
 
       if (find_block) {
@@ -1177,7 +1176,7 @@ export const allPayments = async (
     } = req.body;
     i18n.setLocale(req, ln);
 
-    const query: Record<string, any> = {};
+    const query: Record<string, unknown> = {};
 
     if (fromDate && toDate) {
       query.payment_date = {

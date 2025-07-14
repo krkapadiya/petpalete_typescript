@@ -12,7 +12,7 @@ import { maintenanceMode } from "./util/response_functions";
 
 const isMaintenanceMode = process.env.APP_MAINTENANCE_MODE === "true";
 
-const configureApp = (server: any) => {
+const configureApp = (server: express.Application) => {
   i18n.configure({
     locales: ["en"],
     directory: path.join(__dirname, "./localization"),

@@ -26,7 +26,7 @@ const response_functions_1 = require("./../../../../util/response_functions");
 const user_function_1 = require("./../../../../util/user_function");
 const allUserList = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { search = "", page = 1, limit = 10, ln } = req.body;
+        const { search = "", page = 1, limit = 10, ln } = req.body;
         i18n_1.default.setLocale(req, ln);
         const escapedSearch = search ? yield (0, user_function_1.escapeRegex)(search) : null;
         const users_data = yield model_users_1.users.aggregate([
@@ -176,7 +176,7 @@ const allUserList = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.allUserList = allUserList;
 const userDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { user_id, ln } = req.body;
+        const { user_id, ln } = req.body;
         i18n_1.default.setLocale(req, ln);
         const userObjectId = yield (0, user_function_1.objectId)(user_id);
         const [find_user_data] = yield model_users_1.users.aggregate([
@@ -270,13 +270,13 @@ const blockUnblockUser = (req, res) => __awaiter(void 0, void 0, void 0, functio
     try {
         const { block_user_id, is_block, ln } = req.body;
         i18n_1.default.setLocale(req, ln);
-        let find_user = yield (0, user_function_1.findUser)(block_user_id);
+        const find_user = yield (0, user_function_1.findUser)(block_user_id);
         if (!find_user) {
             yield (0, response_functions_1.errorRes)(res, res.__("User not found."));
             return;
         }
-        if (is_block == true || is_block == "true") {
-            let find_block = yield (0, user_function_1.findBlockUser)(block_user_id);
+        if (is_block === true || is_block === "true") {
+            const find_block = yield (0, user_function_1.findBlockUser)(block_user_id);
             if (find_block) {
                 yield (0, response_functions_1.successRes)(res, "User has been successfully blocked.", []);
                 return;
@@ -1051,7 +1051,7 @@ const allPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const { search = "", fromDate, toDate, page = 1, limit = 10, ln, } = req.body;
         i18n_1.default.setLocale(req, ln);
-        let query = {};
+        const query = {};
         if (fromDate && toDate) {
             query.payment_date = {
                 $gte: new Date(fromDate),

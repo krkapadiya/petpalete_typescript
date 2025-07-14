@@ -3,16 +3,17 @@ import { Request, Response } from "express";
 import { communities } from "../../../model/model.communities";
 import { users } from "../../../model/model.users";
 import { guests } from "../../../model/model.guests";
-import { notifications } from "./../../../model/model.notifications";
+import { notifications } from "../../../model/model.notifications";
 import { communities_albums } from "../../../model/model.communities_albums";
-import { IUser } from "./../../../model/model.users";
-import { ICommunityAlbum } from "./../../../model/model.communities_albums";
+import { ICommunityAlbum } from "../../../model/model.communities_albums";
+
+// type UserWithId = { _id: string | ObjectId };
 
 import {
   errorRes,
   successRes,
   multiSuccessRes,
-} from "./../../../../util/response_functions";
+} from "../../../../util/response_functions";
 
 import {
   findCommunity,
@@ -23,34 +24,34 @@ import {
   findUsersCommunity,
   findCommunityAlbums,
   findCommunityAlbumById,
-} from "./../../../../util/user_function";
+} from "../../../../util/user_function";
 
-import { multiNotificationSend } from "./../../../../util/send_notifications";
+import { multiNotificationSend } from "../../../../util/send_notifications";
 
 import {
   uploadMediaIntoS3Bucket,
   removeMediaFromS3Bucket,
-} from "./../../../../util/bucket_manager";
+} from "../../../../util/bucket_manager";
 
 export interface IUserRequest extends Request {
   user: {
     _id: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
 interface CommunityInsertData {
   user_id: string;
-  title: any;
-  address: any;
-  description: any;
-  location?: any; // You can replace `any` with a proper GeoJSON Point type if available
+  title: string;
+  address: string;
+  description: string;
+  location?: unknown; // You can replace `any` with aproper GeoJSON Point type if available
 }
 
-interface CommunityDoc {
-  _id: string; // or ObjectId if you're using Mongoose's ObjectId
-  [key: string]: any;
-}
+// interface CommunityDoc {
+//   _id: string; // or ObjectId if you're using Mongoose's ObjectId
+//   [key: string]: unknown;
+// }
 
 export const addCommunity = async (
   req: IUserRequest,
@@ -74,15 +75,13 @@ export const addCommunity = async (
       insert_data.location = location_json_parse;
     }
 
-    const newCommunity = (await communities.create(
-      insert_data,
-    )) as CommunityDoc;
+    const newCommunity = await communities.create(insert_data);
 
     if (newCommunity) {
       const userObjectId = await objectId(user_id);
 
       const location_parse = JSON.parse(location);
-      const find_nearby_users = await users.find({
+      const find_nearby_users = (await users.find({
         _id: { $ne: user_id },
         is_deleted: false,
         is_blocked_by_admin: false,
@@ -98,7 +97,11 @@ export const addCommunity = async (
             $maxDistance: 160934, // 50 miles
           },
         },
-      });
+      })) as { _id: { toString: () => string } }[];
+
+      const nearUserIds: string[] = find_nearby_users.map((user) =>
+        user._id.toString(),
+      );
 
       const find_nearby_guest_users = await guests.find({
         location: {
@@ -115,10 +118,6 @@ export const addCommunity = async (
         },
       });
 
-      const nearUserIds: string[] = find_nearby_users.map(
-        (user: { _id: any }) => user._id.toString(),
-      );
-
       const nearUserDeviceTokens: string[] = find_nearby_guest_users.map(
         (user: { device_token: string }) => user.device_token,
       );
@@ -129,7 +128,7 @@ export const addCommunity = async (
             success: boolean;
             statuscode: number;
             message: string;
-            data: never[];
+            data: string[];
           } = await findMultipleUserDeviceToken(nearUserIds);
 
       const noti_msg =
@@ -213,9 +212,17 @@ export const addMultipleServices = async (
 
       const newService = await communities.create(insert_data);
 
-      const fileData = {
+      interface CommunityAlbumData {
+        user_id: string;
+        community_id: string;
+        album_type: "image" | "video";
+        album_thumbnail?: string | null;
+        album_path: string;
+      }
+
+      const fileData: CommunityAlbumData = {
         user_id: user_id,
-        community_id: newService._id,
+        community_id: newService._id.toString(),
         album_type: "image",
         album_thumbnail: null,
         album_path: "community_media/8324_1749737660281.jpg",
@@ -334,10 +341,18 @@ export const deleteCommunity = async (
     const response = await findCommunityAlbums(user_id, community_id);
 
     // Type guard: check if response is an array
-    const albums: any[] = Array.isArray(response)
-      ? response
-      : Array.isArray(response?.data)
-        ? response.data
+    interface Album {
+      album_type: string;
+      album_path?: string;
+      album_thumbnail?: string;
+    }
+    const toAlbums = (val: unknown): Album[] =>
+      Array.isArray(val) ? (val as Album[]) : [];
+
+    const albums: Album[] = Array.isArray(response)
+      ? toAlbums(response)
+      : Array.isArray((response as { data?: unknown }).data)
+        ? toAlbums((response as { data: unknown }).data)
         : [];
 
     for (const element of albums) {
@@ -393,8 +408,25 @@ export const uploadCommunityMedia = async (
       return;
     }
 
-    let album = (req.files as { [fieldname: string]: any })["album"];
-    let thumbnail = (req.files as { [fieldname: string]: any })["thumbnail"];
+    interface MediaFile {
+      originalFilename: string;
+      path: string;
+      mimetype?: string;
+    }
+
+    const convertToMediaFile = (file: Express.Multer.File): MediaFile => ({
+      originalFilename: file.originalname,
+      path: file.path,
+    });
+
+    let album =
+      (req.files as { [key: string]: Express.Multer.File[] })["album"]?.map(
+        convertToMediaFile,
+      ) || [];
+    let thumbnail =
+      (req.files as { [key: string]: Express.Multer.File[] })["thumbnail"]?.map(
+        convertToMediaFile,
+      ) || [];
 
     if (!album) {
       await errorRes(res, res.__("Album file is missing."));
@@ -418,8 +450,8 @@ export const uploadCommunityMedia = async (
 
     for (let i = 0; i < albumType.length; i++) {
       const album_type_i = albumType[i];
-      const media = album[i];
-      const content_type = media.type;
+      const media = thumbnail[0];
+      const content_type = media.mimetype || "image/jpeg";
 
       const res_upload_file = await uploadMediaIntoS3Bucket(
         media,
@@ -431,7 +463,15 @@ export const uploadCommunityMedia = async (
         const user_image_path = `${folder_name}/` + res_upload_file.file_name;
 
         if (album_type_i === "image") {
-          const fileData = {
+          interface CommunityAlbumData {
+            user_id: string;
+            community_id: string;
+            album_type: string;
+            album_thumbnail?: string;
+            album_path: string;
+          }
+
+          const fileData: CommunityAlbumData = {
             user_id,
             community_id,
             album_type: album_type_i,
@@ -453,7 +493,7 @@ export const uploadCommunityMedia = async (
             const res_upload_thumb = await uploadMediaIntoS3Bucket(
               thumbnail[i],
               folder_name_thumbnail,
-              thumbnail[i].type,
+              "image/jpeg",
             );
 
             if (res_upload_thumb.status) {
@@ -512,7 +552,12 @@ export const removeCommunityMedia = async (
 
     const userAlbum = await findCommunityAlbumById(album_id, user_id);
 
-    if (!userAlbum || (userAlbum as any)?.data) {
+    interface ErrorResponse {
+      status: "error";
+      message: string;
+    }
+
+    if (!userAlbum || (userAlbum as ErrorResponse).status === "error") {
       await errorRes(res, res.__("Album not found."));
       return;
     }
@@ -792,7 +837,7 @@ export const communityListing = async (
 
     const escapedSearch = search ? await escapeRegex(search) : null;
 
-    const query: Record<string, any> = {
+    const query: Record<string, unknown> = {
       is_deleted: false,
       user_id: { $ne: user_id },
     };
@@ -1016,7 +1061,7 @@ export const guestCommunityListing = async (
 
     const escapedSearch = search ? await escapeRegex(search) : null;
 
-    const query: Record<string, any> = {
+    const query: Record<string, unknown> = {
       is_deleted: false,
     };
 

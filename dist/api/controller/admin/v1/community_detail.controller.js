@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.communityDetail = exports.allCommunityList = void 0;
 const i18n_1 = __importDefault(require("i18n"));
-const { communities } = require("./../../../model/model.communities");
+const model_communities_1 = require("../../../model/model.communities");
 const response_functions_1 = require("./../../../../util/response_functions");
 const user_function_1 = require("./../../../../util/user_function");
 const allCommunityList = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -32,7 +32,7 @@ const allCommunityList = (req, res) => __awaiter(void 0, void 0, void 0, functio
             const maxLat = lat1 + radians * (180 / Math.PI);
             const minLong = long1 - (radians * (180 / Math.PI)) / Math.cos((lat1 * Math.PI) / 180);
             const maxLong = long1 + (radians * (180 / Math.PI)) / Math.cos((lat1 * Math.PI) / 180);
-            let query = {
+            const query = {
                 is_deleted: false,
             };
             query.location = {
@@ -59,7 +59,7 @@ const allCommunityList = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 },
             };
         }
-        let query = {
+        const query = {
             is_deleted: false,
         };
         if (escapedSearch) {
@@ -68,8 +68,8 @@ const allCommunityList = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 { description: { $regex: escapedSearch, $options: "i" } },
             ];
         }
-        const total_communities = yield communities.countDocuments(query);
-        const communities_list = yield communities.aggregate([
+        const total_communities = yield model_communities_1.communities.countDocuments(query);
+        const communities_list = yield model_communities_1.communities.aggregate([
             {
                 $match: query,
             },
@@ -167,7 +167,7 @@ const communityDetail = (req, res) => __awaiter(void 0, void 0, void 0, function
             return;
         }
         const communityObjectId = yield (0, user_function_1.objectId)(community_id);
-        const community_detail = yield communities.aggregate([
+        const community_detail = yield model_communities_1.communities.aggregate([
             {
                 $match: {
                     _id: communityObjectId,

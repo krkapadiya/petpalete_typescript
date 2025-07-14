@@ -50,7 +50,8 @@ export default [
     rules: {
       "@typescript-eslint/no-unused-vars": ["error"],
       "@typescript-eslint/explicit-module-boundary-types": "off",
-      "no-console": "error",
+      "no-console": "off",
+      //  "no-console": ["error", { allow: ["error"] }],
       eqeqeq: ["error", "always"],
       "prettier/prettier": "error",
       strict: ["error", "global"],

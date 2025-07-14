@@ -54,7 +54,9 @@ const projectId = process.env.PROJECT_ID || "your-project-id";
 // Manually map snake_case to camelCase to satisfy ServiceAccount type
 const serviceAccount = {
     clientEmail: serviceAccount_json_1.default.client_email,
-    privateKey: serviceAccount_json_1.default.private_key,
+    privateKey: serviceAccount_json_1.default.private_key
+        .replace(/\n/g, "\n")
+        .replace(/\\n/g, "\n"),
     projectId: serviceAccount_json_1.default.project_id,
 };
 function getAccessToken() {
@@ -88,8 +90,9 @@ const subscribeToTopic = (deviceTokens, topic) => __awaiter(void 0, void 0, void
         return { success: true, count: response.successCount };
     }
     catch (error) {
-        console.log("Error subscribing to topic:", error.message);
-        return { success: false, error: error.message };
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.log("Error subscribing to topic:", errorMessage);
+        return { success: false, error: errorMessage };
     }
 });
 const unsubscribeFromTopic = (deviceTokens, topic) => __awaiter(void 0, void 0, void 0, function* () {
@@ -104,8 +107,9 @@ const unsubscribeFromTopic = (deviceTokens, topic) => __awaiter(void 0, void 0, 
         return { success: true, count: response.successCount };
     }
     catch (error) {
-        console.log("Error unsubscribing from topic:", error.message);
-        return { success: false, error: error.message };
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.log("Error unsubscribing from topic:", errorMessage);
+        return { success: false, error: errorMessage };
     }
 });
 const singleNotificationSend = (notification_data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -142,7 +146,8 @@ const singleNotificationSend = (notification_data) => __awaiter(void 0, void 0, 
         });
     }
     catch (error) {
-        console.error("Error sending notification:", error.message);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("Error sending notification:", errorMessage);
         return null;
     }
 });
@@ -208,7 +213,8 @@ const multiNotificationSend = (notification_data) => __awaiter(void 0, void 0, v
         console.log("Notification sent to topic:", topic);
     }
     catch (error) {
-        console.error("Error sending notification to topic", error.message);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("Error sending notification to topic", errorMessage);
     }
     const unsubscribeResult = yield unsubscribeFromTopic(device_token, topic);
     if (!unsubscribeResult.success) {

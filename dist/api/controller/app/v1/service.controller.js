@@ -80,9 +80,9 @@ const addService = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             const nearUserIds = find_nearby_users.map((user) => user._id);
             const nearUserDeviceTokens = find_nearby_guest_users.map((user) => user.device_token);
             const deviceTokenData = yield (0, user_function_1.findMultipleUserDeviceToken)(nearUserIds);
-            let noti_msg = `A new ${newService.service_name} is now available in your area!`;
-            let noti_title = "New Service Nearby";
-            let noti_for = "new_service";
+            const noti_msg = `A new ${newService.service_name} is now available in your area!`;
+            const noti_title = "New Service Nearby";
+            const noti_for = "new_service";
             notiData = {
                 noti_msg,
                 noti_title,
@@ -110,6 +110,7 @@ const addService = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 device_token: nearUserDeviceTokens,
                 service_id: newService._id,
                 id: newService._id,
+                sound_name: "default", // Add the required sound_name property
             };
             if (Array.isArray(nearUserDeviceTokens) &&
                 nearUserDeviceTokens.length > 0) {
@@ -145,14 +146,14 @@ const addMultipleServices = (req, res) => __awaiter(void 0, void 0, void 0, func
                 insert_data.location = location_json_parse;
             }
             const newService = yield model_services_1.services.create(insert_data);
-            const fileData = {
-                user_id: user_id,
+            const albumPayload = {
+                user_id,
                 service_id: newService._id,
                 album_type: "image",
                 album_thumbnail: null,
                 album_path: "service_media/1043_1749735486495.jpg",
             };
-            yield model_service_albums_1.service_albums.create(fileData);
+            yield model_service_albums_1.service_albums.create(albumPayload);
             console.log("No of service: ", i);
         }
     }
@@ -222,7 +223,7 @@ const deleteService = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         const find_all_service_albums = yield (0, user_function_1.findServiceAlbums)(user_id, service_id);
         for (const element of find_all_service_albums) {
-            if (element.album_type == "video") {
+            if (element.album_type === "video") {
                 yield (0, bucket_manager_1.removeMediaFromS3Bucket)(element.album_path);
                 yield (0, bucket_manager_1.removeMediaFromS3Bucket)(element.album_thumbnail);
             }
@@ -257,7 +258,7 @@ const likeDislikeServices = (req, res) => __awaiter(void 0, void 0, void 0, func
             yield (0, response_functions_1.errorRes)(res, res.__("Service not found."));
             return;
         }
-        if (is_like == true || is_like == "true") {
+        if (is_like === true || is_like === "true") {
             const find_like = yield (0, user_function_1.findServiceLike)(user_id, service_id);
             if (find_like) {
                 yield (0, response_functions_1.successRes)(res, res.__("Service liked successfully."), []);
@@ -292,80 +293,76 @@ const uploadServiceMedia = (req, res) => __awaiter(void 0, void 0, void 0, funct
     var _a, _b;
     try {
         const user_id = req.user._id;
-        const { service_id, album_type, ln } = req.body;
-        let album = (_a = req.files) === null || _a === void 0 ? void 0 : _a.album;
-        let thumbnail = (_b = req.files) === null || _b === void 0 ? void 0 : _b.thumbnail;
+        const { service_id, album_type, ln = "en" } = req.body;
         i18n_1.default.setLocale(req, ln);
-        const folder_name = "service_media";
-        const folder_name_thumbnail = "video_thumbnail";
-        if (!Array.isArray(album)) {
-            album = [album];
-        }
-        if (thumbnail && !Array.isArray(thumbnail)) {
-            thumbnail = [thumbnail];
-        }
-        let albumType = [];
-        if (album_type) {
-            albumType = JSON.parse(album_type);
-        }
+        const files = (_a = req.files) !== null && _a !== void 0 ? _a : {};
+        const albumFiles = files.album
+            ? Array.isArray(files.album)
+                ? files.album
+                : [files.album]
+            : [];
+        const thumbnailFiles = files.thumbnail
+            ? Array.isArray(files.thumbnail)
+                ? files.thumbnail
+                : [files.thumbnail]
+            : [];
+        const albumTypes = album_type ? JSON.parse(album_type) : [];
         const uploadedFiles = [];
-        for (let i = 0; i < albumType.length; i++) {
-            const album_type_i = albumType[i];
-            const media = album[i];
-            const content_type = media.type;
-            const res_upload_file = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(media, folder_name, content_type);
-            if (res_upload_file.status) {
-                if (album_type_i == "image") {
-                    const user_image_path = `${folder_name}/` + res_upload_file.file_name;
-                    const fileData = {
-                        user_id: user_id,
-                        service_id: service_id,
-                        album_type: album_type_i,
-                        album_thumbnail: null,
-                        album_path: user_image_path,
-                    };
-                    const add_albums = yield model_service_albums_1.service_albums.create(fileData);
-                    add_albums.album_path =
-                        process.env.BUCKET_URL + add_albums.album_path;
-                    uploadedFiles.push(add_albums);
-                }
-                if (album_type_i == "video") {
-                    const file_name = res_upload_file.file_name;
-                    const user_image_path = `${folder_name}/${file_name}`;
-                    let thumbnail_image_path = null;
-                    if (thumbnail && thumbnail[i]) {
-                        const res_upload_thumb = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(thumbnail[i], folder_name_thumbnail, thumbnail[i].type);
-                        if (res_upload_thumb.status) {
-                            thumbnail_image_path = `${folder_name_thumbnail}/${res_upload_thumb.file_name}`;
-                            const fileData = {
-                                user_id: user_id,
-                                service_id: service_id,
-                                album_type: album_type_i,
-                                album_thumbnail: thumbnail_image_path,
-                                album_path: user_image_path,
-                            };
-                            const add_albums = yield model_service_albums_1.service_albums.create(fileData);
-                            add_albums.album_path =
-                                process.env.BUCKET_URL + add_albums.album_path;
-                            add_albums.album_thumbnail =
-                                process.env.BUCKET_URL + add_albums.album_thumbnail;
-                            uploadedFiles.push(add_albums);
-                        }
-                    }
-                }
-            }
-            else {
+        const mediaFolder = "service_media";
+        const thumbFolder = "video_thumbnail";
+        const bucketUrl = (_b = process.env.BUCKET_URL) !== null && _b !== void 0 ? _b : "";
+        for (let i = 0; i < albumTypes.length; i += 1) {
+            const currentType = albumTypes[i];
+            const mediaFile = albumFiles[i];
+            if (!mediaFile)
+                continue;
+            const uploadRes = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(mediaFile, mediaFolder, mediaFile.type);
+            if (!uploadRes.status) {
                 yield (0, response_functions_1.errorRes)(res, res.__("Media upload failed for one of the files."));
                 return;
             }
+            const mediaPath = `${mediaFolder}/${uploadRes.file_name}`;
+            if (currentType === "image") {
+                const doc = yield model_service_albums_1.service_albums.create({
+                    user_id,
+                    service_id: service_id,
+                    album_type: "image",
+                    album_thumbnail: null,
+                    album_path: mediaPath,
+                });
+                doc.album_path = bucketUrl + doc.album_path;
+                uploadedFiles.push(doc);
+                continue;
+            }
+            if (currentType === "video") {
+                let thumbPath = null;
+                if (thumbnailFiles[i]) {
+                    const thumbRes = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(thumbnailFiles[i], thumbFolder, thumbnailFiles[i].type);
+                    if (!thumbRes.status) {
+                        yield (0, response_functions_1.errorRes)(res, res.__("Thumbnail upload failed."));
+                        return;
+                    }
+                    thumbPath = `${thumbFolder}/${thumbRes.file_name}`;
+                }
+                const doc = yield model_service_albums_1.service_albums.create({
+                    user_id,
+                    service_id: service_id,
+                    album_type: "video",
+                    album_thumbnail: thumbPath,
+                    album_path: mediaPath,
+                });
+                doc.album_path = bucketUrl + doc.album_path;
+                if (doc.album_thumbnail) {
+                    doc.album_thumbnail = bucketUrl + doc.album_thumbnail;
+                }
+                uploadedFiles.push(doc);
+            }
         }
         yield (0, response_functions_1.successRes)(res, res.__("Service media uploaded successfully."), uploadedFiles);
-        return;
     }
-    catch (error) {
-        console.log("Error : ", error);
+    catch (err) {
+        console.error("uploadServiceMedia error:", err);
         yield (0, response_functions_1.errorRes)(res, res.__("Internal server error"));
-        return;
     }
 });
 exports.uploadServiceMedia = uploadServiceMedia;
@@ -381,7 +378,7 @@ const removeServiceMedia = (req, res) => __awaiter(void 0, void 0, void 0, funct
         }
         else if ("album_path" in userAlbum) {
             const res_remove_file = yield (0, bucket_manager_1.removeMediaFromS3Bucket)(userAlbum.album_path);
-            if (userAlbum.album_type == "video" && userAlbum.album_thumbnail) {
+            if (userAlbum.album_type === "video" && userAlbum.album_thumbnail) {
                 yield (0, bucket_manager_1.removeMediaFromS3Bucket)(userAlbum.album_thumbnail);
             }
             if (res_remove_file.status) {

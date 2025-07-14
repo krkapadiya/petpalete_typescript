@@ -111,8 +111,8 @@ export const findMultipleUserDeviceToken = async (user_ids: string[]) => {
       .find({ user_id: { $in: user_ids }, user_type: "user" })
       .distinct("device_token");
   } catch (error) {
-    console.error("Error:", error);
-    return InternalErrorRes();
+    console.error("Error fetching device tokens:", error);
+    return [];
   }
 };
 
@@ -276,7 +276,7 @@ export const findCommunityAlbums = async (
 export const findCommunityAlbumById = async (
   album_id: string,
   user_id: string,
-) => {
+): Promise<any | null> => {
   try {
     const album_data_by_id = await communities_albums.findOne({
       _id: album_id,
@@ -285,8 +285,8 @@ export const findCommunityAlbumById = async (
 
     return album_data_by_id;
   } catch (error) {
-    console.log("Error : ", error);
-    return InternalErrorRes();
+    console.error("Error finding community album:", error);
+    return null;
   }
 };
 
@@ -630,7 +630,7 @@ export const findContent = async (content_id: string) => {
   }
 };
 
-export const findFaqByName = async (question: any) => {
+export const findFaqByName = async (question: string) => {
   try {
     const faq_data = await faqs.findOne({
       question: question,
@@ -643,7 +643,7 @@ export const findFaqByName = async (question: any) => {
   }
 };
 
-export const findFaq = async (faq_id: any) => {
+export const findFaq = async (faq_id: string) => {
   try {
     const faq_data = await faqs.findOne({
       _id: faq_id,

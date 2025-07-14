@@ -1,8 +1,8 @@
 import { Response } from "express";
 
-// ========== Express Response Handlers ==========
+// ============ Express Response Handlers ============
 
-export const successRes = async (res: Response, msg: string, data: any) => {
+export const successRes = async (res: Response, msg: string, data: unknown) => {
   return res.send({
     success: true,
     statuscode: 1,
@@ -23,7 +23,7 @@ export const multiSuccessRes = async (
   res: Response,
   msg: string,
   total_count: number,
-  data: any,
+  data: unknown,
 ) => {
   return res.send({
     success: true,
@@ -39,7 +39,7 @@ export const countMultiSuccessRes = async (
   msg: string,
   total_count: number,
   total_amount: number,
-  data: any,
+  data: unknown,
 ) => {
   return res.send({
     success: true,
@@ -55,7 +55,7 @@ export const tokenSuccessRes = async (
   res: Response,
   msg: string,
   token: string,
-  data: any,
+  data: unknown,
 ) => {
   return res.send({
     success: true,
@@ -69,7 +69,7 @@ export const tokenSuccessRes = async (
 export const manyMultiSuccessRes = async (
   res: Response,
   msg: string,
-  data: any,
+  data: unknown,
   total_count: number,
   page_count: number,
 ) => {
@@ -115,9 +115,9 @@ export const webAuthFailRes = async (res: Response, msg: string) => {
   });
 };
 
-// ========== Socket Response Handlers ==========
+// ============ Socket Response Handlers ============
 
-export const socketSuccessRes = async (msg: string, data: any) => {
+export const socketSuccessRes = async (msg: string, data: unknown) => {
   return {
     success: true,
     statuscode: 1,
@@ -129,7 +129,7 @@ export const socketSuccessRes = async (msg: string, data: any) => {
 export const socketMultiSuccessRes = async (
   msg: string,
   total_count: number,
-  data: any,
+  data: unknown,
 ) => {
   return {
     success: true,
@@ -140,7 +140,14 @@ export const socketMultiSuccessRes = async (
   };
 };
 
-export const socketErrorRes = async (msg: string) => {
+interface ErrorResponse {
+  success: boolean;
+  statuscode: number;
+  message: string;
+  data: unknown[];
+}
+
+export const socketErrorRes = async (msg: string): Promise<ErrorResponse> => {
   return {
     success: false,
     statuscode: 0,
@@ -149,7 +156,7 @@ export const socketErrorRes = async (msg: string) => {
   };
 };
 
-export const InternalErrorRes = async () => {
+export const InternalErrorRes = async (): Promise<ErrorResponse> => {
   return {
     success: false,
     statuscode: 0,

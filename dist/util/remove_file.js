@@ -20,12 +20,14 @@ const removeFile = (data) => __awaiter(void 0, void 0, void 0, function* () {
                 yield fs_1.promises.unlink(filepath);
             }
             catch (err) {
-                console.error(`Error deleting file ${filepath}:`, err.message);
+                const errorMessage = err instanceof Error ? err.message : String(err);
+                console.error(`Error deleting file ${filepath}:`, errorMessage);
             }
         }
     }
     catch (err) {
-        console.error("Unexpected error in removeFile:", err);
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error("Unexpected error in removeFile:", errorMessage);
     }
 });
 exports.removeFile = removeFile;

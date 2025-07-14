@@ -45,7 +45,7 @@ const appVersionCheck = (req, res) => __awaiter(void 0, void 0, void 0, function
     try {
         const { app_version, app_platform, ln } = req.body;
         i18n_1.default.setLocale(req, ln);
-        let result = {};
+        const result = {};
         const check_version = yield model_app_versions_1.app_versions.findOne({
             app_version: app_version,
             is_live: true,

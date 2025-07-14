@@ -56,20 +56,20 @@ const setSocketId = (data) => __awaiter(void 0, void 0, void 0, function* () {
 exports.setSocketId = setSocketId;
 const disconnectSocket = (data, v1version) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { socket_id, ln = "en" } = data;
+        const { socket_id, ln = "en" } = data;
         i18n_1.default.setLocale(ln);
-        let findUserSession = yield model_user_sessions_1.user_sessions.findOne({
+        const findUserSession = yield model_user_sessions_1.user_sessions.findOne({
             socket_id: socket_id,
         });
         console.log({ findUserSession });
         if (findUserSession) {
-            let findUser = yield model_users_1.users.findOne({
+            const findUser = yield model_users_1.users.findOne({
                 _id: findUserSession.user_id,
                 is_deleted: false,
             });
             console.log({ findUser });
             if (findUser) {
-                let user_id = findUser._id;
+                const user_id = findUser._id;
                 yield model_user_sessions_1.user_sessions.updateOne({
                     _id: findUserSession._id,
                 }, {
@@ -79,26 +79,26 @@ const disconnectSocket = (data, v1version) => __awaiter(void 0, void 0, void 0, 
                         chat_room_id: null,
                     },
                 }, { new: true });
-                if (findUserSession.chat_room_id != null) {
-                    let findChatRoom = yield model_chat_rooms_1.chat_rooms.findOne({
+                if (findUserSession.chat_room_id !== null) {
+                    const findChatRoom = yield model_chat_rooms_1.chat_rooms.findOne({
                         _id: findUserSession.chat_room_id,
                         is_deleted: false,
                     });
                     if (findChatRoom) {
-                        let userIsOnlineInChatRoom = yield model_user_sessions_1.user_sessions.find({
+                        const userIsOnlineInChatRoom = yield model_user_sessions_1.user_sessions.find({
                             user_id: findUser._id,
                             chat_room_id: findChatRoom._id,
                             socket_id: { $ne: socket_id },
                             is_active: true,
                         });
-                        if (userIsOnlineInChatRoom.length == 0) {
-                            let changeStatusData = {
+                        if (userIsOnlineInChatRoom.length === 0) {
+                            const changeStatusData = {
                                 chat_room_id: findChatRoom._id,
                                 screen_status: false,
                                 user_id: findUser._id,
                                 socket_id: socket_id,
                             };
-                            let changeScreenStatusData = yield (0, chat_1.changeScreenStatus)(Object.assign(Object.assign({}, changeStatusData), { ln: "en" }));
+                            const changeScreenStatusData = yield (0, chat_1.changeScreenStatus)(Object.assign(Object.assign({}, changeStatusData), { ln: "en" }));
                             if (changeScreenStatusData.success) {
                                 v1version
                                     .to(findChatRoom._id)
@@ -107,11 +107,11 @@ const disconnectSocket = (data, v1version) => __awaiter(void 0, void 0, void 0, 
                         }
                     }
                 }
-                let userIsOnline = yield model_user_sessions_1.user_sessions.find({
+                const userIsOnline = yield model_user_sessions_1.user_sessions.find({
                     user_id: findUser._id,
                     is_active: true,
                 });
-                if (userIsOnline.length == 0) {
+                if (userIsOnline.length === 0) {
                     yield model_users_1.users.updateOne({
                         _id: findUser._id,
                     }, {
@@ -141,15 +141,15 @@ const disconnectSocket = (data, v1version) => __awaiter(void 0, void 0, void 0, 
 exports.disconnectSocket = disconnectSocket;
 const checkUserIsOnline = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { user_id, ln = "en" } = data;
+        const { user_id, ln = "en" } = data;
         i18n_1.default.setLocale(ln);
-        let findUser = yield model_users_1.users.findOne({
+        const findUser = yield model_users_1.users.findOne({
             _id: user_id,
             is_deleted: false,
             is_self_delete: false,
         });
         if (findUser) {
-            let userIsOnline = yield model_user_sessions_1.user_sessions.find({
+            const userIsOnline = yield model_user_sessions_1.user_sessions.find({
                 user_id: findUser._id,
                 is_active: true,
             });

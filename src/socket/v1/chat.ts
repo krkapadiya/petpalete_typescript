@@ -578,7 +578,7 @@ export const sendMessage = async (data: SendMessageData) => {
 
     const media_file_array: MediaFileData[] = [];
 
-    if (message_type == "media") {
+    if (message_type === "media") {
       for (const value of media_file) {
         const files: MediaFileData = {
           file_type: value.file_type,
@@ -625,7 +625,7 @@ export const sendMessage = async (data: SendMessageData) => {
 
       let noti_msg;
 
-      if (message_type == "media") {
+      if (message_type === "media") {
         noti_msg = `sent a media 🎥📸`;
       } else {
         noti_msg = message;
@@ -956,8 +956,8 @@ export const deleteMessage = async (data: deleteMessageData) => {
 
     const updatedMessage = await findMessage(chatObjectId.toString());
 
-    if (updatedMessage && updatedMessage.message_type == "media") {
-      if (updatedMessage.is_delete_by.length == 2) {
+    if (updatedMessage && updatedMessage.message_type === "media") {
+      if (updatedMessage.is_delete_by.length === 2) {
         updatedMessage.media_file.map(async (media: MediaFileData) => {
           try {
             if (media.thumbnail_name) {
@@ -1011,9 +1011,9 @@ export const deleteMessageForEveryOne = async (data: deleteMessageData) => {
 
     const updatedMessage = await findMessage(chatObjectId.toString());
 
-    if (updatedMessage && updatedMessage.message_type == "media") {
-      console.log(updatedMessage && updatedMessage.message_type == "media");
-      if (updatedMessage.is_delete_everyone == true) {
+    if (updatedMessage && updatedMessage.message_type === "media") {
+      console.log(updatedMessage && updatedMessage.message_type === "media");
+      if (updatedMessage.is_delete_everyone === true) {
         updatedMessage.media_file.map(async (media: MediaFileData) => {
           try {
             if (media.thumbnail_name) {
@@ -1623,7 +1623,7 @@ export const changeScreenStatus = async (data: changeScreenStatusData) => {
       return socketErrorRes("Chat room not found");
     }
 
-    if (screen_status == "true" || screen_status == true) {
+    if (screen_status === "true" || screen_status === true) {
       await user_sessions.updateOne(
         {
           user_id: user_id,

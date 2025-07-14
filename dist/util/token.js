@@ -15,7 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.userToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const userToken = (findCustomer) => __awaiter(void 0, void 0, void 0, function* () {
-    const data = jsonwebtoken_1.default.sign({ id: findCustomer._id }, process.env.TOKEN_KEY);
-    return data;
+    if (!findCustomer || !findCustomer._id) {
+        throw new Error("Invalid customer document");
+    }
+    const token = jsonwebtoken_1.default.sign({ id: findCustomer._id }, process.env.TOKEN_KEY, { expiresIn: "24h" });
+    return token;
 });
 exports.userToken = userToken;

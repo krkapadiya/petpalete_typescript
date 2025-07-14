@@ -8,11 +8,13 @@ export const removeFile = async (data: string | string[]): Promise<void> => {
       const filepath = `./uploads/${file}`;
       try {
         await fs.unlink(filepath);
-      } catch (err: any) {
-        console.error(`Error deleting file ${filepath}:`, err.message);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error(`Error deleting file ${filepath}:`, errorMessage);
       }
     }
-  } catch (err) {
-    console.error("Unexpected error in removeFile:", err);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error("Unexpected error in removeFile:", errorMessage);
   }
 };

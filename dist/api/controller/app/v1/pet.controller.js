@@ -28,106 +28,101 @@ const bucket_manager_1 = require("./../../../../util/bucket_manager");
 const addPet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user_id = req.user._id;
-        const { pet_name, pet_type, pet_breed, location, address, gender, price, description, ln, } = req.body;
-        console.log("req.body", req.body);
+        const { pet_name, pet_type, pet_breed, location, address, gender, price, description, ln = "en", } = req.body;
         i18n_1.default.setLocale(req, ln);
-        const insert_data = {
-            user_id: user_id,
-            pet_name: pet_name,
-            pet_type: pet_type,
-            pet_breed: pet_breed,
-            address: address,
-            gender: gender,
-            price: price,
-            description: description,
-        };
-        if (location) {
-            const location_json_parse = JSON.parse(location);
-            insert_data.location = location_json_parse;
-        }
+        const locationPoint = location
+            ? JSON.parse(location)
+            : undefined;
+        const insert_data = Object.assign({ user_id,
+            pet_name,
+            pet_type,
+            pet_breed,
+            address,
+            gender, price: price ? Number(price) : undefined, description }, (locationPoint ? { location: locationPoint } : {}));
         const newPet = yield model_pets_1.pets.create(insert_data);
-        if (newPet) {
-            const userObjectId = yield (0, user_function_1.objectId)(user_id);
-            let notiData = {};
-            const location_parse = JSON.parse(location);
-            const find_nearby_users = yield model_users_1.users.find({
-                _id: { $ne: user_id },
-                is_deleted: false,
-                is_blocked_by_admin: false,
-                location: {
-                    $near: {
-                        $geometry: {
-                            type: "Point",
-                            coordinates: [
-                                location_parse.coordinates[0],
-                                location_parse.coordinates[1],
-                            ],
+        if (newPet && locationPoint) {
+            if (newPet && locationPoint) {
+                const userObjectId = yield (0, user_function_1.objectId)(user_id);
+                // Find users & guests near this location (50 miles ≈ 160,934 m)
+                const [nearUsers, nearGuests] = yield Promise.all([
+                    model_users_1.users.find({
+                        _id: { $ne: user_id },
+                        is_deleted: false,
+                        is_blocked_by_admin: false,
+                        location: {
+                            $near: {
+                                $geometry: {
+                                    type: "Point",
+                                    coordinates: [
+                                        locationPoint.coordinates[0],
+                                        locationPoint.coordinates[1],
+                                    ],
+                                },
+                                $maxDistance: 160934,
+                            },
                         },
-                        $maxDistance: 160934, //Distance in meters  - 50 miles
-                    },
-                },
-            });
-            const find_nearby_guest_users = yield model_guests_1.guests.find({
-                location: {
-                    $near: {
-                        $geometry: {
-                            type: "Point",
-                            coordinates: [
-                                location_parse.coordinates[0],
-                                location_parse.coordinates[1],
-                            ],
+                    }),
+                    model_guests_1.guests.find({
+                        location: {
+                            $near: {
+                                $geometry: {
+                                    type: "Point",
+                                    coordinates: [
+                                        locationPoint.coordinates[0],
+                                        locationPoint.coordinates[1],
+                                    ],
+                                },
+                                $maxDistance: 160934,
+                            },
                         },
-                        $maxDistance: 160934, //Distance in meters  - 50 miles
-                    },
-                },
-            });
-            const nearUserIds = find_nearby_users.map((user) => user._id);
-            const nearUserDeviceTokens = find_nearby_guest_users.map((user) => user.device_token);
-            const deviceTokenData = yield (0, user_function_1.findMultipleUserDeviceToken)(nearUserIds);
-            let noti_msg = `A new ${newPet.pet_name} is available for adoption near you!`;
-            let noti_title = "New listing Alert!";
-            let noti_for = "new_pet";
-            notiData = {
-                noti_msg,
-                noti_title,
-                noti_for,
-                device_token: deviceTokenData,
-                pet_id: newPet._id,
-                id: newPet._id,
-            };
-            yield model_notifications_1.notifications.create({
-                sender_id: userObjectId,
-                receiver_ids: nearUserIds,
-                noti_title: noti_title,
-                noti_msg: `A new {pet_name} is available for adoption near you!`,
-                noti_for: noti_for,
-                pet_id: newPet._id,
-            });
-            if (deviceTokenData &&
-                Array.isArray(deviceTokenData) &&
-                deviceTokenData.length > 0) {
-                (0, send_notifications_1.multiNotificationSend)(notiData);
-                (0, user_function_1.incMultipleUserNotificationBadge)(nearUserIds);
+                    }),
+                ]);
+                const nearUserIds = nearUsers.map((u) => u._id);
+                const guestDeviceTokens = nearGuests.map((g) => g.device_token);
+                const userDeviceTokens = yield (0, user_function_1.findMultipleUserDeviceToken)(nearUserIds);
+                const noti_msg = `A new ${newPet.pet_name} is available for adoption near you!`;
+                const noti_title = "New listing Alert!";
+                const noti_for = "new_pet";
+                // Registered users
+                if (userDeviceTokens.length) {
+                    const notiData = {
+                        device_token: userDeviceTokens,
+                        noti_title,
+                        noti_msg,
+                        noti_for,
+                        id: newPet._id.toString(),
+                        sound_name: "default",
+                    };
+                    yield model_notifications_1.notifications.create({
+                        sender_id: userObjectId,
+                        receiver_ids: nearUserIds,
+                        noti_title,
+                        noti_msg,
+                        noti_for,
+                        pet_id: newPet._id.toString(),
+                    });
+                    (0, send_notifications_1.multiNotificationSend)(notiData);
+                    (0, user_function_1.incMultipleUserNotificationBadge)(nearUserIds);
+                }
+                // Guest users
+                if (guestDeviceTokens.length) {
+                    const notiDataGuest = {
+                        device_token: guestDeviceTokens,
+                        noti_title,
+                        noti_msg,
+                        noti_for,
+                        id: newPet._id.toString(),
+                        sound_name: "default",
+                    };
+                    (0, send_notifications_1.multiNotificationSend)(notiDataGuest);
+                }
             }
-            const notiDataGuest = {
-                noti_msg,
-                noti_title,
-                noti_for,
-                device_token: nearUserDeviceTokens,
-                pet_id: newPet._id,
-                id: newPet._id,
-            };
-            if (nearUserDeviceTokens.length > 0) {
-                (0, send_notifications_1.multiNotificationSend)(notiDataGuest);
-            }
+            yield (0, response_functions_1.successRes)(res, res.__("The pet has been successfully added."), newPet);
         }
-        yield (0, response_functions_1.successRes)(res, res.__("The pet has been successfully added."), newPet);
-        return;
     }
     catch (error) {
-        console.log("Error:", error);
+        console.error("addPet error:", error);
         yield (0, response_functions_1.errorRes)(res, res.__("Internal server error"));
-        return;
     }
 });
 exports.addPet = addPet;
@@ -154,7 +149,7 @@ const addMultiplePet = (req, res) => __awaiter(void 0, void 0, void 0, function*
             const newPet = yield model_pets_1.pets.create(insert_data);
             const fileData = {
                 user_id: user_id,
-                pet_id: newPet._id,
+                pet_id: newPet._id.toString(),
                 album_type: "image",
                 album_thumbnail: null,
                 album_path: "pet_media/7278_1749737449083.jpg",
@@ -234,7 +229,7 @@ const deletePet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const find_all_pet_albums = yield (0, user_function_1.findPetAlbums)(user_id, pet_id);
         if (Array.isArray(find_all_pet_albums)) {
             for (const element of find_all_pet_albums) {
-                if (element.album_type == "video") {
+                if (element.album_type === "video") {
                     yield (0, bucket_manager_1.removeMediaFromS3Bucket)(element.album_path);
                     if (element.album_thumbnail) {
                         yield (0, bucket_manager_1.removeMediaFromS3Bucket)(element.album_thumbnail);
@@ -280,7 +275,7 @@ const adoptPet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return;
         }
         if ("is_adopted" in find_pet) {
-            if (is_adopted == true || is_adopted == "true") {
+            if (is_adopted === true || is_adopted === "true") {
                 if (find_pet.is_adopted === true ||
                     find_pet.is_adopted === "true") {
                     yield (0, response_functions_1.successRes)(res, res.__("The pet has already been marked as adopted."), []);
@@ -331,7 +326,7 @@ const likeDislikePets = (req, res) => __awaiter(void 0, void 0, void 0, function
             yield (0, response_functions_1.errorRes)(res, res.__("Pet not found."));
             return;
         }
-        if (is_like == true || is_like == "true") {
+        if (is_like === true || is_like === "true") {
             const find_like = yield (0, user_function_1.findPetLike)(user_id, pet_id);
             if (find_like) {
                 yield (0, response_functions_1.successRes)(res, res.__("Pet liked successfully."), []);
@@ -360,80 +355,81 @@ const uploadPetMedia = (req, res) => __awaiter(void 0, void 0, void 0, function*
     var _a, _b;
     try {
         const user_id = req.user._id;
-        const { pet_id, album_type, ln } = req.body;
-        let album = (_a = req.files) === null || _a === void 0 ? void 0 : _a.album;
-        let thumbnail = (_b = req.files) === null || _b === void 0 ? void 0 : _b.thumbnail;
+        const { pet_id, album_type, ln = "en" } = req.body;
         i18n_1.default.setLocale(req, ln);
-        const folder_name = "pet_media";
-        const folder_name_thumbnail = "video_thumbnail";
-        if (!Array.isArray(album)) {
-            album = [album];
-        }
-        if (thumbnail && !Array.isArray(thumbnail)) {
-            thumbnail = [thumbnail];
-        }
-        let albumType = [];
-        if (album_type) {
-            albumType = JSON.parse(album_type);
-        }
+        const files = (_a = req.files) !== null && _a !== void 0 ? _a : {};
+        // Always work with arrays
+        const albumFiles = files.album
+            ? Array.isArray(files.album)
+                ? files.album
+                : [files.album]
+            : [];
+        const thumbnailFiles = files.thumbnail
+            ? Array.isArray(files.thumbnail)
+                ? files.thumbnail
+                : [files.thumbnail]
+            : [];
+        const albumTypes = album_type ? JSON.parse(album_type) : [];
         const uploadedFiles = [];
-        for (let i = 0; i < albumType.length; i++) {
-            const album_type_i = albumType[i];
-            const media = album[i];
-            const content_type = media.type;
-            const res_upload_file = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(media, folder_name, content_type);
-            if (res_upload_file.status) {
-                if (album_type_i == "image") {
-                    const user_image_path = `${folder_name}/` + res_upload_file.file_name;
-                    const fileData = {
-                        user_id: user_id,
-                        pet_id: pet_id,
-                        album_type: album_type_i,
-                        album_thumbnail: null,
-                        album_path: user_image_path,
-                    };
-                    const add_albums = yield model_pet_albums_1.pet_albums.create(fileData);
-                    add_albums.album_path =
-                        process.env.BUCKET_URL + add_albums.album_path;
-                    uploadedFiles.push(add_albums);
-                }
-                if (album_type_i == "video") {
-                    const file_name = res_upload_file.file_name;
-                    const user_image_path = `${folder_name}/${file_name}`;
-                    let thumbnail_image_path = null;
-                    if (thumbnail && thumbnail[i]) {
-                        const res_upload_thumb = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(thumbnail[i], folder_name_thumbnail, thumbnail[i].type);
-                        if (res_upload_thumb.status) {
-                            thumbnail_image_path = `${folder_name_thumbnail}/${res_upload_thumb.file_name}`;
-                            const fileData = {
-                                user_id: user_id,
-                                pet_id: pet_id,
-                                album_type: album_type_i,
-                                album_thumbnail: thumbnail_image_path,
-                                album_path: user_image_path,
-                            };
-                            const add_albums = yield model_pet_albums_1.pet_albums.create(fileData);
-                            add_albums.album_path =
-                                process.env.BUCKET_URL + add_albums.album_path;
-                            add_albums.album_thumbnail =
-                                process.env.BUCKET_URL + add_albums.album_thumbnail;
-                            uploadedFiles.push(add_albums);
-                        }
-                    }
-                }
-            }
-            else {
+        const mediaFolder = "pet_media";
+        const thumbFolder = "video_thumbnail";
+        const bucketUrl = (_b = process.env.BUCKET_URL) !== null && _b !== void 0 ? _b : "";
+        for (let i = 0; i < albumTypes.length; i += 1) {
+            const currentType = albumTypes[i]; // "image" | "video"
+            const mediaFile = albumFiles[i];
+            // Skip if the arrays are mismatched
+            if (!mediaFile)
+                continue;
+            const uploadRes = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(mediaFile, mediaFolder, mediaFile.type);
+            if (!uploadRes.status) {
                 yield (0, response_functions_1.errorRes)(res, res.__("Media upload failed for one of the files."));
                 return;
             }
+            // Shared path variables
+            const fileName = uploadRes.file_name;
+            const mediaPath = `${mediaFolder}/${fileName}`;
+            if (currentType === "image") {
+                const doc = yield model_pet_albums_1.pet_albums.create({
+                    user_id,
+                    pet_id,
+                    album_type: "image",
+                    album_thumbnail: null,
+                    album_path: mediaPath,
+                });
+                doc.album_path = bucketUrl + doc.album_path;
+                uploadedFiles.push(doc);
+                continue;
+            }
+            if (currentType === "video") {
+                let thumbPath = null;
+                if (thumbnailFiles[i]) {
+                    const thumbRes = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(thumbnailFiles[i], thumbFolder, thumbnailFiles[i].type);
+                    if (!thumbRes.status) {
+                        yield (0, response_functions_1.errorRes)(res, res.__("Thumbnail upload failed."));
+                        return;
+                    }
+                    thumbPath = `${thumbFolder}/${thumbRes.file_name}`;
+                }
+                const doc = yield model_pet_albums_1.pet_albums.create({
+                    user_id,
+                    pet_id,
+                    album_type: "video",
+                    album_thumbnail: thumbPath,
+                    album_path: mediaPath,
+                });
+                doc.album_path = bucketUrl + doc.album_path;
+                if (doc.album_thumbnail) {
+                    doc.album_thumbnail = bucketUrl + doc.album_thumbnail;
+                }
+                uploadedFiles.push(doc);
+            }
         }
+        /* ── Success response ───────────────────────────────────── */
         yield (0, response_functions_1.successRes)(res, res.__("Pet media uploaded successfully."), uploadedFiles);
-        return;
     }
-    catch (error) {
-        console.log("Error : ", error);
+    catch (err) {
+        console.error("uploadPetMedia error:", err);
         yield (0, response_functions_1.errorRes)(res, res.__("Internal server error"));
-        return;
     }
 });
 exports.uploadPetMedia = uploadPetMedia;
@@ -449,7 +445,7 @@ const removePetMedia = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         else if ("album_path" in userAlbum) {
             const res_remove_file = yield (0, bucket_manager_1.removeMediaFromS3Bucket)(userAlbum.album_path);
-            if (userAlbum.album_type == "video" && userAlbum.album_thumbnail) {
+            if (userAlbum.album_type === "video" && userAlbum.album_thumbnail) {
                 yield (0, bucket_manager_1.removeMediaFromS3Bucket)(userAlbum.album_thumbnail);
             }
             if (res_remove_file.status) {

@@ -22,14 +22,12 @@
     "@types/concurrently": "^6.4.0",
     "@types/cors": "^2.8.19",
     "@types/dotenv": "^6.1.1",
-    "@types/express": "^5.0.3",
     "@types/i18n": "^0.13.12",
     "@types/joi": "^17.2.2",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/moment": "^2.11.29",
     "@types/moment-timezone": "^0.5.13",
     "@types/morgan": "^1.9.10",
-    "@types/multer": "^2.0.0",
     "@types/nodemailer": "^6.4.17",
     "@types/socket.io": "^3.0.1",
     "@types/stripe": "^8.0.416",
@@ -59,6 +57,8 @@
     "stripe": "^18.3.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.5.1",
     "prettier": "^3.6.2",

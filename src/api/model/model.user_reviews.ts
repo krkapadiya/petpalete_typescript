@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 export interface IUserReview extends mongoose.Document {
   user_id: mongoose.Schema.Types.ObjectId;

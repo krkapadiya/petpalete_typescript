@@ -12,7 +12,7 @@ const http_1 = __importDefault(require("http"));
 const i18n_1 = __importDefault(require("i18n"));
 const index_route_1 = __importDefault(require("./api/route/app/v1/index.route"));
 const response_functions_1 = require("./util/response_functions");
-let isMaintenanceMode = process.env.APP_MAINTENANCE_MODE === "true";
+const isMaintenanceMode = process.env.APP_MAINTENANCE_MODE === "true";
 const configureApp = (server) => {
     i18n_1.default.configure({
         locales: ["en"],
@@ -47,7 +47,7 @@ const configureApp = (server) => {
 };
 // Apply shared configuration to app
 configureApp(app);
-var APP_PORT = process.env.APP_PORT || 4430;
+const APP_PORT = process.env.APP_PORT || 4430;
 const server = http_1.default.createServer(app);
 // const server = https.createServer(
 //     {

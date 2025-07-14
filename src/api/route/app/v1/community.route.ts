@@ -34,8 +34,12 @@ import {
   userCommunityListingDto,
 } from "../../../dto/app/v1/community_dto";
 
-app_router.post("/add-community", userAuth, multipartMiddleware, (req, res) =>
-  addCommunity(req as IUserRequest, res),
+app_router.post(
+  "/add-community",
+  userAuth,
+  multipartMiddleware,
+  validateRequest(addCommunityDto),
+  (req, res) => addCommunity(req as IUserRequest, res),
 );
 app_router.post(
   "/add_multiple_community",

@@ -104,5 +104,13 @@
 	"Message not find": "Message not find",
 	"User is offline": "User is offline",
 	"You do not have permission to edit this message": "You do not have permission to edit this message",
-	"You do not have permission to delete this message": "You do not have permission to delete this message"
+	"You do not have permission to delete this message": "You do not have permission to delete this message",
+	"Admin account created successfully.": "Admin account created successfully.",
+	"Your password has been successfully changed.": "Your password has been successfully changed.",
+	"An OTP has been successfully sent to your email.": "An OTP has been successfully sent to your email.",
+	"Please enter a valid OTP.": "Please enter a valid OTP.",
+	"Your password has been successfully reset.": "Your password has been successfully reset.",
+	"Data has been successfully loaded.": "Data has been successfully loaded.",
+	"The FAQ has been successfully activated.": "The FAQ has been successfully activated.",
+	"User has been successfully blocked.": "User has been successfully blocked."
 }

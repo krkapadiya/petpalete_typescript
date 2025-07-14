@@ -24,7 +24,7 @@ export const securePassword = async (password: string) => {
 export const comparePassword = async (password: string, dbPassword: string) => {
   const originalPwd = await decryptPassword(dbPassword);
 
-  if (originalPwd == password) {
+  if (originalPwd === password) {
     return true;
   } else {
     return false;

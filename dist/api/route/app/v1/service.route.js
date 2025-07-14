@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const service_router = express_1.default.Router();
-const multipart = require("connect-multiparty");
-const multipartMiddleware = multipart();
+const connect_multiparty_1 = __importDefault(require("connect-multiparty"));
+const multipartMiddleware = (0, connect_multiparty_1.default)();
 const validation_1 = require("../../../middlewares/validation");
 const auth_1 = require("../../../middlewares/auth");
 const service_controller_1 = require("../../../controller/app/v1/service.controller");

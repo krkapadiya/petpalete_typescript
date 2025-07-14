@@ -62,10 +62,10 @@ const verifyToken = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         next();
     }
     catch (error) {
-        if (error.message === "jwt malformed") {
+        if (error instanceof Error && error.message === "jwt malformed") {
             return void (0, response_functions_1.authFailRes)(res, "Authentication failed.");
         }
-        console.log("jwt::::::::::", error.message);
+        console.log("jwt::::::::::", error);
         return void (0, response_functions_1.errorRes)(res, "Internal server error");
     }
 });
@@ -94,10 +94,10 @@ const verifyTokenCreateProfile = (req, res, next) => __awaiter(void 0, void 0, v
         next();
     }
     catch (error) {
-        if (error.message === "jwt malformed") {
+        if (error instanceof Error && error.message === "jwt malformed") {
             return void (0, response_functions_1.authFailRes)(res, "Authentication failed.");
         }
-        console.log("jwt::::::::::", error.message);
+        console.log("jwt::::::::::", error);
         return void (0, response_functions_1.errorRes)(res, "Internal server error");
     }
 });
@@ -129,10 +129,10 @@ const verifyTokenLogout = (req, res, next) => __awaiter(void 0, void 0, void 0, 
         next();
     }
     catch (error) {
-        if (error.message === "jwt malformed") {
+        if (error instanceof Error && error.message === "jwt malformed") {
             return void (0, response_functions_1.authFailRes)(res, "Authentication failed.");
         }
-        console.log("jwt::::::::::", error.message);
+        console.log("jwt::::::::::", error);
         return void (0, response_functions_1.errorRes)(res, "Internal server error");
     }
 });

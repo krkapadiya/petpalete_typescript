@@ -83,7 +83,7 @@ export const setSocketId = async (data: SetSocketIdData) => {
 
 export const disconnectSocket = async (
   data: DisconnectSocketData,
-  v1version: any,
+  v1version: string,
 ) => {
   try {
     const { socket_id, ln = "en" } = data;
@@ -119,7 +119,7 @@ export const disconnectSocket = async (
           { new: true },
         );
 
-        if (findUserSession.chat_room_id != null) {
+        if (findUserSession.chat_room_id !== null) {
           const findChatRoom = await chat_rooms.findOne({
             _id: findUserSession.chat_room_id,
             is_deleted: false,
@@ -133,7 +133,7 @@ export const disconnectSocket = async (
               is_active: true,
             });
 
-            if (userIsOnlineInChatRoom.length == 0) {
+            if (userIsOnlineInChatRoom.length === 0) {
               const changeStatusData = {
                 chat_room_id: findChatRoom._id as unknown as string,
                 screen_status: false,
@@ -160,7 +160,7 @@ export const disconnectSocket = async (
           is_active: true,
         });
 
-        if (userIsOnline.length == 0) {
+        if (userIsOnline.length === 0) {
           await users.updateOne(
             {
               _id: findUser._id,

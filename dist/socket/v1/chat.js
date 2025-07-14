@@ -26,27 +26,27 @@ const user_function_1 = require("../../util/user_function");
 const bucket_manager_1 = require("../../util/bucket_manager");
 const createRoom = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { user_id, other_user_id, ln = "en" } = data;
+        const { user_id, other_user_id, ln = "en" } = data;
         i18n_1.default.setLocale(ln);
-        let userObjectId = new mongoose_1.default.Types.ObjectId(user_id);
-        let otherUserObjectId = new mongoose_1.default.Types.ObjectId(other_user_id);
-        let cond1 = {
+        const userObjectId = new mongoose_1.default.Types.ObjectId(user_id);
+        const otherUserObjectId = new mongoose_1.default.Types.ObjectId(other_user_id);
+        const cond1 = {
             user_id: userObjectId,
             other_user_id: otherUserObjectId,
             is_deleted: false,
         };
-        let cond2 = {
+        const cond2 = {
             user_id: otherUserObjectId,
             other_user_id: userObjectId,
             is_deleted: false,
         };
-        let findRoom = yield model_chat_rooms_1.chat_rooms.findOne({
+        const findRoom = yield model_chat_rooms_1.chat_rooms.findOne({
             $or: [cond1, cond2],
         });
         let chat_room_id;
         if (findRoom) {
             chat_room_id = findRoom._id;
-            let findChatDeleteByUser = yield model_chat_rooms_1.chat_rooms.findOne({
+            const findChatDeleteByUser = yield model_chat_rooms_1.chat_rooms.findOne({
                 _id: findRoom._id,
                 is_delete_by: { $eq: user_id },
             });
@@ -57,11 +57,11 @@ const createRoom = (data) => __awaiter(void 0, void 0, void 0, function* () {
             }
         }
         else {
-            let createData = {
+            const createData = {
                 user_id: userObjectId,
                 other_user_id: otherUserObjectId,
             };
-            let createNewRoom = yield model_chat_rooms_1.chat_rooms.create(createData);
+            const createNewRoom = yield model_chat_rooms_1.chat_rooms.create(createData);
             chat_room_id = createNewRoom._id;
         }
         // let [ChatRoomData] = await chat_rooms.aggregate([
@@ -411,7 +411,7 @@ const createRoom = (data) => __awaiter(void 0, void 0, void 0, function* () {
 exports.createRoom = createRoom;
 const sendMessage = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { sender_id, chat_room_id, receiver_id, message, message_type, media_file, ln = "en", } = data;
+        const { sender_id, chat_room_id, receiver_id, message, message_type, media_file, ln = "en", } = data;
         i18n_1.default.setLocale(ln);
         const currentDateTime = yield (0, date_formats_1.dateTime)();
         const senderObjectId = new mongoose_1.default.Types.ObjectId(sender_id);
@@ -427,8 +427,8 @@ const sendMessage = (data) => __awaiter(void 0, void 0, void 0, function* () {
             message: message,
             message_type: message_type,
         };
-        let media_file_array = [];
-        if (message_type == "media") {
+        const media_file_array = [];
+        if (message_type === "media") {
             for (const value of media_file) {
                 const files = {
                     file_type: value.file_type,
@@ -442,7 +442,7 @@ const sendMessage = (data) => __awaiter(void 0, void 0, void 0, function* () {
         if (media_file_array.length > 0) {
             insertData = Object.assign(Object.assign({}, insertData), { media_file: media_file_array });
         }
-        let receiverIsOnline = yield model_user_sessions_1.user_sessions.findOne({
+        const receiverIsOnline = yield model_user_sessions_1.user_sessions.findOne({
             user_id: receiver_id,
             is_active: true,
             chat_room_id: chat_room_id,
@@ -457,15 +457,15 @@ const sendMessage = (data) => __awaiter(void 0, void 0, void 0, function* () {
             return (0, response_functions_1.InternalErrorRes)();
         }
         if (!receiverIsOnline) {
-            let noti_title = findSender.full_name || "";
+            const noti_title = findSender.full_name || "";
             let noti_msg;
-            if (message_type == "media") {
+            if (message_type === "media") {
                 noti_msg = `sent a media 🎥📸`;
             }
             else {
                 noti_msg = message;
             }
-            let noti_for = "chat_notification";
+            const noti_for = "chat_notification";
             let notiData = {
                 device_token: [],
                 noti_title: findSender.full_name || "",
@@ -476,16 +476,16 @@ const sendMessage = (data) => __awaiter(void 0, void 0, void 0, function* () {
                 sender_id,
                 sound_name: "default",
             };
-            let findDeviceTokens = yield model_user_sessions_1.user_sessions.find({
+            const findDeviceTokens = yield model_user_sessions_1.user_sessions.find({
                 user_id: receiver_id,
             });
-            let deviceTokenArray = findDeviceTokens.map((row) => row.device_token);
+            const deviceTokenArray = findDeviceTokens.map((row) => row.device_token);
             if (deviceTokenArray.length > 0) {
                 notiData = Object.assign(Object.assign({}, notiData), { device_token: deviceTokenArray });
                 (0, send_notifications_1.multiNotificationSend)(notiData);
                 (0, user_function_1.incNotificationBadge)(receiver_id);
             }
-            let inAppNotificationData = {
+            const inAppNotificationData = {
                 sender_id: sender_id,
                 receiver_id: receiver_id,
                 chat_room_id: chat_room_id,
@@ -565,7 +565,7 @@ const sendMessage = (data) => __awaiter(void 0, void 0, void 0, function* () {
                 },
             },
         ]);
-        let findChatDeleteByUser = yield model_chat_rooms_1.chat_rooms.findOne({
+        const findChatDeleteByUser = yield model_chat_rooms_1.chat_rooms.findOne({
             _id: chat_room_id,
             $or: [
                 { is_delete_by: { $eq: receiver_id } },
@@ -735,19 +735,19 @@ const deleteMessage = (data) => __awaiter(void 0, void 0, void 0, function* () {
         if (!find_message) {
             return (0, response_functions_1.socketErrorRes)(i18n_1.default.__("Message not find"));
         }
-        let delete_data = { is_delete_by: user_id };
+        const delete_data = { is_delete_by: user_id };
         yield model_chats_1.chats
             .updateOne({ _id: find_message._id }, { $push: delete_data })
             .where({ is_delete_by: { $ne: user_id } });
         const updatedMessage = yield (0, user_function_1.findMessage)(chatObjectId.toString());
-        if (updatedMessage && updatedMessage.message_type == "media") {
-            if (updatedMessage.is_delete_by.length == 2) {
+        if (updatedMessage && updatedMessage.message_type === "media") {
+            if (updatedMessage.is_delete_by.length === 2) {
                 updatedMessage.media_file.map((media) => __awaiter(void 0, void 0, void 0, function* () {
                     try {
                         if (media.thumbnail_name) {
                             yield (0, bucket_manager_1.removeMediaFromS3Bucket)(media.thumbnail_name);
                         }
-                        let file_name = `socket_media/${media.file_name}`;
+                        const file_name = `socket_media/${media.file_name}`;
                         yield (0, bucket_manager_1.removeMediaFromS3Bucket)(file_name);
                     }
                     catch (error) {
@@ -782,15 +782,15 @@ const deleteMessageForEveryOne = (data) => __awaiter(void 0, void 0, void 0, fun
         }
         yield model_chats_1.chats.updateOne({ _id: findMessageData._id }, { $set: { is_delete_everyone: true } });
         const updatedMessage = yield (0, user_function_1.findMessage)(chatObjectId.toString());
-        if (updatedMessage && updatedMessage.message_type == "media") {
-            console.log(updatedMessage && updatedMessage.message_type == "media");
-            if (updatedMessage.is_delete_everyone == true) {
+        if (updatedMessage && updatedMessage.message_type === "media") {
+            console.log(updatedMessage && updatedMessage.message_type === "media");
+            if (updatedMessage.is_delete_everyone === true) {
                 updatedMessage.media_file.map((media) => __awaiter(void 0, void 0, void 0, function* () {
                     try {
                         if (media.thumbnail_name) {
                             yield (0, bucket_manager_1.removeMediaFromS3Bucket)(media.thumbnail_name);
                         }
-                        let file_name = `socket_media/${media.file_name}`;
+                        const file_name = `socket_media/${media.file_name}`;
                         yield (0, bucket_manager_1.removeMediaFromS3Bucket)(file_name);
                     }
                     catch (error) {
@@ -857,7 +857,7 @@ const chatUserList = (data) => __awaiter(void 0, void 0, void 0, function* () {
         i18n_1.default.setLocale(ln);
         const escapedSearch = search ? yield (0, user_function_1.escapeRegex)(search) : null;
         const userObjectId = new mongoose_1.default.Types.ObjectId(user_id);
-        let matchCondition = {
+        const matchCondition = {
             $or: [{ user_id: userObjectId }, { other_user_id: userObjectId }],
             is_delete_by: { $ne: new mongoose_1.default.Types.ObjectId(user_id) },
             is_deleted: false,
@@ -1099,7 +1099,7 @@ const updatedChatRoomData = (data) => __awaiter(void 0, void 0, void 0, function
         i18n_1.default.setLocale(ln);
         const userObjectId = new mongoose_1.default.Types.ObjectId(user_id);
         const chatObjectId = new mongoose_1.default.Types.ObjectId(chat_room_id);
-        let matchCondition = {
+        const matchCondition = {
             _id: chatObjectId,
             is_deleted: false,
         };
@@ -1317,7 +1317,7 @@ const deleteChatRoom = (data) => __awaiter(void 0, void 0, void 0, function* () 
         if (!findChatRoomExists) {
             return (0, response_functions_1.socketErrorRes)(i18n_1.default.__("Message not find"));
         }
-        let delete_data = { is_delete_by: user_id };
+        const delete_data = { is_delete_by: user_id };
         yield model_chats_1.chats
             .updateMany({ chat_room_id: chat_room_id }, { $push: delete_data })
             .where({ is_delete_by: { $ne: user_id } });
@@ -1336,15 +1336,15 @@ const deleteChatRoom = (data) => __awaiter(void 0, void 0, void 0, function* () 
 exports.deleteChatRoom = deleteChatRoom;
 const changeScreenStatus = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { user_id, screen_status, chat_room_id, socket_id } = data;
-        let find_chat_room = yield model_chat_rooms_1.chat_rooms.findOne({
+        const { user_id, screen_status, chat_room_id, socket_id } = data;
+        const find_chat_room = yield model_chat_rooms_1.chat_rooms.findOne({
             _id: chat_room_id,
             is_deleted: false,
         });
         if (!find_chat_room) {
             return (0, response_functions_1.socketErrorRes)("Chat room not found");
         }
-        if (screen_status == "true" || screen_status == true) {
+        if (screen_status === "true" || screen_status === true) {
             yield model_user_sessions_1.user_sessions.updateOne({
                 user_id: user_id,
                 socket_id: socket_id,

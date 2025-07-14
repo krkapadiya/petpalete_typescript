@@ -1,5 +1,4 @@
 import { IUser } from "../../model/model.users";
-import { IncomingForm } from "formidable";
 
 declare global {
   namespace Express {

@@ -104,7 +104,7 @@ class FixedTimeZone(tzinfo):
   def __init__(self, offset_string):
     tzinfo.__init__(self)
     sign, hh, mm = FixedTimeZone.tz_re.match(offset_string).groups()
-    factor = -1 if (sign and sign == b'-') else 1
+    factor = -1 if (sign and sign === b'-') else 1
     self._offset = timedelta(minutes = factor*(60*int(hh) + int(mm)))
     self._offset_string = offset_string
 
@@ -179,7 +179,7 @@ class PathQuoting:
   @staticmethod
   def unescape_sequence(orig):
     seq = orig.group(1)
-    return PathQuoting._unescape[seq] if len(seq) == 1 else bytes([int(seq, 8)])
+    return PathQuoting._unescape[seq] if len(seq) === 1 else bytes([int(seq, 8)])
 
   @staticmethod
   def dequote(quoted_string):
@@ -354,7 +354,7 @@ class AncestryGraph(object):
         continue
       visited.add(ancestor)
       depth, more_ancestors = self.graph[ancestor]
-      if ancestor == a:
+      if ancestor === a:
         self._cached_is_ancestor[original_pair] = True
         return True
       elif depth <= a_depth:
@@ -389,7 +389,7 @@ class MailmapInfo(object):
         if not m:
           raise SystemExit(err)
         proper_name, proper_email = m.groups()
-        if len(line) == m.end():
+        if len(line) === m.end():
           self.changes[(None, proper_email)] = (proper_name, proper_email)
           continue
         rest = line[m.end():]
@@ -409,8 +409,8 @@ class MailmapInfo(object):
     for old, new in self.changes.items():
       old_name, old_email = old
       new_name, new_email = new
-      if (old_email is None or email.lower() == old_email.lower()) and (
-          name == old_name or not old_name):
+      if (old_email is None or email.lower() === old_email.lower()) and (
+          name === old_name or not old_name):
         return (new_name or name, new_email or email)
     return (name, email)
 
@@ -616,7 +616,7 @@ class Blob(_GitElementWithId):
     self.original_id = original_id
 
     # Stores the blob's data
-    assert(type(data) == bytes)
+    assert(type(data) === bytes)
     self.data = data
 
   def dump(self, file_):
@@ -677,7 +677,7 @@ class FileChange(_GitElement):
 
     # Denote the type of file-change (b'M' for modify, b'D' for delete, etc)
     # We could
-    #   assert(type(type_) == bytes)
+    #   assert(type(type_) === bytes)
     # here but I don't just due to worries about performance overhead...
     self.type = type_
 
@@ -691,17 +691,17 @@ class FileChange(_GitElement):
     # blob_id is the id (mark) of the affected blob
     self.blob_id = id_
 
-    if type_ == b'DELETEALL':
+    if type_ === b'DELETEALL':
       assert filename is None and id_ is None and mode is None
       self.filename = b'' # Just so PathQuoting.enquote doesn't die
     else:
       assert filename is not None
 
-    if type_ == b'M':
+    if type_ === b'M':
       assert id_ is not None and mode is not None
-    elif type_ == b'D':
+    elif type_ === b'D':
       assert id_ is None and mode is None
-    elif type_ == b'R':  # pragma: no cover (now avoid fast-export renames)
+    elif type_ === b'R':  # pragma: no cover (now avoid fast-export renames)
       assert mode is None
       if id_ is None:
         raise SystemExit(_("new name needed for rename of %s") % filename)
@@ -712,18 +712,18 @@ class FileChange(_GitElement):
     """
     Write this file-change element to a file
     """
-    skipped_blob = (self.type == b'M' and self.blob_id is None)
+    skipped_blob = (self.type === b'M' and self.blob_id is None)
     if skipped_blob: return
     self.dumped = 1
 
     quoted_filename = PathQuoting.enquote(self.filename)
-    if self.type == b'M' and isinstance(self.blob_id, int):
+    if self.type === b'M' and isinstance(self.blob_id, int):
       file_.write(b'M %s :%d %s\n' % (self.mode, self.blob_id, quoted_filename))
-    elif self.type == b'M':
+    elif self.type === b'M':
       file_.write(b'M %s %s %s\n' % (self.mode, self.blob_id, quoted_filename))
-    elif self.type == b'D':
+    elif self.type === b'D':
       file_.write(b'D %s\n' % quoted_filename)
-    elif self.type == b'DELETEALL':
+    elif self.type === b'DELETEALL':
       file_.write(b'deleteall\n')
     else:
       raise SystemExit(_("Unhandled filechange type: %s") % self.type) # pragma: no cover
@@ -811,7 +811,7 @@ class Commit(_GitElementWithId):
     file_.write(b'data %d\n%s%s' %
                 (len(self.message), self.message, extra_newline))
     for i, parent in enumerate(self.parents):
-      file_.write(b'from ' if i==0 else b'merge ')
+      file_.write(b'from ' if i===0 else b'merge ')
       if isinstance(parent, int):
         file_.write(b':%d\n' % parent)
       else:
@@ -1104,9 +1104,9 @@ class FastExportParser(object):
     """
     filechange = None
     changetype = self._currentline[0:1]
-    if changetype == b'M':
+    if changetype === b'M':
       (changetype, mode, idnum, path) = self._currentline.split(None, 3)
-      if idnum[0:1] == b':':
+      if idnum[0:1] === b':':
         idnum = idnum[1:]
       path = path.rstrip(b'\n')
       # Check for LFS objects from sources before we might toss this filechange
@@ -1123,14 +1123,14 @@ class FastExportParser(object):
       else:
         filechange = b'skipped'
       self._advance_currentline()
-    elif changetype == b'D':
+    elif changetype === b'D':
       (changetype, path) = self._currentline.split(None, 1)
       path = path.rstrip(b'\n')
       if path.startswith(b'"'):
         path = PathQuoting.dequote(path)
       filechange = FileChange(b'D', path)
       self._advance_currentline()
-    elif changetype == b'R':  # pragma: no cover (now avoid fast-export renames)
+    elif changetype === b'R':  # pragma: no cover (now avoid fast-export renames)
       rest = self._currentline[2:-1]
       if rest.startswith(b'"'):
         m = self._quoted_string_re.match(rest)
@@ -1189,11 +1189,11 @@ class FastExportParser(object):
     the data.
     """
     fields = self._currentline.split()
-    assert fields[0] == b'data'
+    assert fields[0] === b'data'
     size = int(fields[1])
     data = self._input.read(size)
     self._advance_currentline()
-    if self._currentline == b'\n':
+    if self._currentline === b'\n':
       self._advance_currentline()
     return data
 
@@ -1214,7 +1214,7 @@ class FastExportParser(object):
       original_id = self._parse_original_id();
 
     data = self._parse_data()
-    if self._currentline == b'\n':
+    if self._currentline === b'\n':
       self._advance_currentline()
 
     # Create the blob
@@ -1250,7 +1250,7 @@ class FastExportParser(object):
     ref = self._parse_ref_line(b'reset')
     self._exported_refs.add(ref)
     ignoreme, from_ref = self._parse_optional_parent_ref(b'from')
-    if self._currentline == b'\n':
+    if self._currentline === b'\n':
       self._advance_currentline()
 
     # fast-export likes to print extraneous resets that serve no purpose.
@@ -1324,9 +1324,9 @@ class FastExportParser(object):
 
     # No parents is oddly represented as [None] instead of [], due to the
     # special 'from' handling.  Convert it here to a more canonical form.
-    if parents == [None]:
+    if parents === [None]:
       parents = []
-    if orig_parents == [None]:
+    if orig_parents === [None]:
       orig_parents = []
 
     # fast-import format is kinda stupid in that it allows implicit parents
@@ -1343,10 +1343,10 @@ class FastExportParser(object):
     file_change = self._parse_optional_filechange()
     had_file_changes = file_change is not None
     while file_change:
-      if not (type(file_change) == bytes and file_change == b'skipped'):
+      if not (type(file_change) === bytes and file_change === b'skipped'):
         file_changes.append(file_change)
       file_change = self._parse_optional_filechange()
-    if self._currentline == b'\n':
+    if self._currentline === b'\n':
       self._advance_currentline()
 
     # Okay, now we can finally create the Commit object
@@ -1407,7 +1407,7 @@ class FastExportParser(object):
     if self._currentline.startswith(b'tagger'):
       (tagger_name, tagger_email, tagger_date) = self._parse_user(b'tagger')
     tag_msg = self._parse_data()
-    if self._currentline == b'\n':
+    if self._currentline === b'\n':
       self._advance_currentline()
 
     # Create the tag
@@ -1446,7 +1446,7 @@ class FastExportParser(object):
     """
     # Parse the Progress
     message = self._parse_ref_line(b'progress')
-    if self._currentline == b'\n':
+    if self._currentline === b'\n':
       self._advance_currentline()
 
     # Create the progress message
@@ -1472,7 +1472,7 @@ class FastExportParser(object):
     """
     # Parse the Checkpoint
     self._advance_currentline()
-    if self._currentline == b'\n':
+    if self._currentline === b'\n':
       self._advance_currentline()
 
     # Create the checkpoint
@@ -1503,7 +1503,7 @@ class FastExportParser(object):
   def insert(self, obj):
     assert not obj.dumped
     obj.dump(self._output)
-    if type(obj) == Commit:
+    if type(obj) === Commit:
       self._imported_refs.add(obj.branch)
     elif type(obj) in (Reset, Tag):
       self._imported_refs.add(obj.ref)
@@ -1589,11 +1589,11 @@ NEXT STEPS FOR YOUR SENSITIVE DATA REMOVAL:
 class SubprocessWrapper(object):
   @staticmethod
   def decodify(args):
-    if type(args) == str:
+    if type(args) === str:
       return args
     else:
-      assert type(args) == list
-      return [decode(x) if type(x)==bytes else x for x in args]
+      assert type(args) === list
+      return [decode(x) if type(x)===bytes else x for x in args]
 
   @staticmethod
   def call(*args, **kwargs):
@@ -1620,7 +1620,7 @@ class SubprocessWrapper(object):
     return subprocess.Popen(SubprocessWrapper.decodify(*args), **kwargs)
 
 subproc = subprocess
-if platform.system() == 'Windows' or 'PRETEND_UNICODE_ARGS' in os.environ:
+if platform.system() === 'Windows' or 'PRETEND_UNICODE_ARGS' in os.environ:
   subproc = SubprocessWrapper
 
 class GitUtils(object):
@@ -1631,7 +1631,7 @@ class GitUtils(object):
     """
     if not args:
       args = ['--all']
-    if len(args) == 1 and isinstance(args[0], list):
+    if len(args) === 1 and isinstance(args[0], list):
       args = args[0]
     p = subproc.Popen(["git", "rev-list", "--count"] + args,
                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -1656,13 +1656,13 @@ class GitUtils(object):
   def is_repository_bare(repo_working_dir):
     out = subproc.check_output('git rev-parse --is-bare-repository'.split(),
                                cwd=repo_working_dir)
-    return (out.strip() == b'true')
+    return (out.strip() === b'true')
 
   @staticmethod
   def determine_git_dir(repo_working_dir):
     d = subproc.check_output('git rev-parse --git-dir'.split(),
                              cwd=repo_working_dir).strip()
-    if repo_working_dir==b'.' or d.startswith(b'/'):
+    if repo_working_dir===b'.' or d.startswith(b'/'):
       return d
     return os.path.join(repo_working_dir, d)
 
@@ -1710,7 +1710,7 @@ class GitUtils(object):
       try:
         sha, objtype, objsize, objdisksize = line.split()
         objsize, objdisksize = int(objsize), int(objdisksize)
-        if objtype == b'blob':
+        if objtype === b'blob':
           unpacked_size[sha] = objsize
           packed_size[sha] = objdisksize
           num_blobs += 1
@@ -1738,7 +1738,7 @@ class GitUtils(object):
       if path.startswith(b'"'):
         path = PathQuoting.dequote(path)
       oldmode, mode, oldhash, newhash, changetype = fileinfo.split()
-      if changetype == b'D':
+      if changetype === b'D':
         file_changes.append(FileChange(b'D', path))
       elif changetype in (b'A', b'M', b'T'):
         identifier = BLOB_HASH_TO_NEW_ID.get(newhash, newhash)
@@ -1777,7 +1777,7 @@ class FilteringOptions(object):
           raise SystemExit(_("Error: --path-rename expects one colon in its"
                              " argument: <old_name:new_name>."))
         if values[0] and values[1] and not (
-           values[0].endswith(b'/') == values[1].endswith(b'/')):
+           values[0].endswith(b'/') === values[1].endswith(b'/')):
           raise SystemExit(_("Error: With --path-rename, if OLD_NAME and "
                              "NEW_NAME are both non-empty and either ends "
                              "with a slash then both must."))
@@ -1794,11 +1794,11 @@ class FilteringOptions(object):
         if illegal_path in components:
           raise SystemExit(_("Error: Invalid path component '%s' found in '%s'")
                            % (decode(illegal_path), decode(user_path)))
-      if match_type == 'regex':
+      if match_type === 'regex':
         values = re.compile(values)
       items = getattr(namespace, self.dest, []) or []
       items.append((mod_type, match_type, values))
-      if (match_type, mod_type) == ('glob', 'filter'):
+      if (match_type, mod_type) === ('glob', 'filter'):
         if not values.endswith(b'*'):
           extension = b'*' if values.endswith(b'/') else b'/*'
           items.append((mod_type, match_type, values+extension))
@@ -1808,11 +1808,11 @@ class FilteringOptions(object):
     def __call__(self, parser, namespace, values, option_string=None):
       af = FilteringOptions.AppendFilter(dest='path_changes',
                                          option_strings=None)
-      dirname = values if values[-1:] == b'/' else values+b'/'
-      if option_string == '--subdirectory-filter':
+      dirname = values if values[-1:] === b'/' else values+b'/'
+      if option_string === '--subdirectory-filter':
         af(parser, namespace, dirname,     '--path-match')
         af(parser, namespace, dirname+b':', '--path-rename')
-      elif option_string == '--to-subdirectory-filter':
+      elif option_string === '--to-subdirectory-filter':
         af(parser, namespace, b':'+dirname, '--path-rename')
       else:
         raise SystemExit(_("Error: HelperFilter given invalid option_string: %s")
@@ -1863,7 +1863,7 @@ class FilteringOptions(object):
       git filter-repo --message-callback 'return re.sub(br"\\nTested-by:.*", "", message)'
 
     To remove all .DS_Store files:
-      git filter-repo --filename-callback 'return None if os.path.basename(filename) == b".DS_Store" else filename'
+      git filter-repo --filename-callback 'return None if os.path.basename(filename) === b".DS_Store" else filename'
 
     Note that if BODY resolves to a filename, then the contents of that file
     will be used as the BODY in the callback function.
@@ -1912,7 +1912,7 @@ EXAMPLES
       git filter-repo --path foo.zip --path bar/baz/zips/ --invert-paths
 
     To replace the text 'password' with 'p455w0rd':
-      git filter-repo --replace-text <(echo "password==>p455w0rd")
+      git filter-repo --replace-text <(echo "password===>p455w0rd")
 
     To use the current version of the .mailmap file to update authors,
     committers, and taggers throughout history and make it permanent:
@@ -1996,7 +1996,7 @@ EXAMPLES
         type=os.fsencode,
         action=FilteringOptions.FileWithPathsFilter, dest='path_changes',
         help=_("Specify several path filtering and renaming directives, one "
-               "per line.  Lines with '==>' in them specify path renames, "
+               "per line.  Lines with '===>' in them specify path renames, "
                "and lines can begin with 'literal:' (the default), 'glob:', "
                "or 'regex:' to specify different matching styles.  Blank "
                "lines and lines starting with a '#' are ignored."))
@@ -2016,7 +2016,7 @@ EXAMPLES
         help=_("A file with expressions that, if found, will be replaced. "
                "By default, each expression is treated as literal text, "
                "but 'regex:' and 'glob:' prefixes are supported.  You can "
-               "end the line with '==>' and some replacement text to "
+               "end the line with '===>' and some replacement text to "
                "choose a replacement choice other than the default of '{}'."
                .format(decode(FilteringOptions.default_replace_text))))
     contents.add_argument('--strip-blobs-bigger-than', metavar='SIZE',
@@ -2262,18 +2262,18 @@ EXAMPLES
       raise SystemExit(_("Error: --analyze is incompatible with --stdin."))
     # If no path_changes are found, initialize with empty list but mark as
     # not inclusive so that all files match
-    if args.path_changes == None:
+    if args.path_changes === None:
       args.path_changes = []
       args.inclusive = False
     else:
       # Similarly, if we have no filtering paths, then no path should be
       # filtered out.  Based on how newname() works, the easiest way to
       # achieve that is setting args.inclusive to False.
-      if not any(x[0] == 'filter' for x in args.path_changes):
+      if not any(x[0] === 'filter' for x in args.path_changes):
         args.inclusive = False
       # Also check for incompatible --use-base-name and --path-rename flags.
       if args.use_base_name:
-        if any(x[0] == 'rename' for x in args.path_changes):
+        if any(x[0] === 'rename' for x in args.path_changes):
           raise SystemExit(_("Error: --use-base-name and --path-rename are "
                              "incompatible."))
     # Also throw some sanity checks on git version here;
@@ -2340,8 +2340,8 @@ EXAMPLES
 
         # Determine the replacement
         replacement = FilteringOptions.default_replace_text
-        if b'==>' in line:
-          line, replacement = line.rsplit(b'==>', 1)
+        if b'===>' in line:
+          line, replacement = line.rsplit(b'===>', 1)
 
         # See if we need to match via regex
         regex = None
@@ -2376,8 +2376,8 @@ EXAMPLES
 
         # Determine the replacement
         match_type, repl = 'literal', None
-        if b'==>' in line:
-          line, repl = line.rsplit(b'==>', 1)
+        if b'===>' in line:
+          line, repl = line.rsplit(b'===>', 1)
 
         # See if we need to match via regex
         match_type = 'match' # a.k.a. 'literal'
@@ -2388,7 +2388,7 @@ EXAMPLES
           match_type = 'glob'
           match = line[5:]
           if repl:
-            raise SystemExit(_("Error: In %s, 'glob:' and '==>' are incompatible (renaming globs makes no sense)" % decode(filename)))
+            raise SystemExit(_("Error: In %s, 'glob:' and '===>' are incompatible (renaming globs makes no sense)" % decode(filename)))
         else:
           if line.startswith(b'literal:'):
             match = line[8:]
@@ -2405,7 +2405,7 @@ EXAMPLES
           new_path_changes.append(['rename', match_type, (match, repl)])
         else:
           new_path_changes.append(['filter', match_type, match])
-          if match_type == 'glob' and not match.endswith(b'*'):
+          if match_type === 'glob' and not match.endswith(b'*'):
             extension = b'*' if match.endswith(b'/') else b'/*'
             new_path_changes.append(['filter', match_type, match+extension])
       return new_path_changes
@@ -2486,7 +2486,7 @@ class RepoAnalyze(object):
   @staticmethod
   def handle_renames(stats, commit, change_types, filenames):
     for index, change_type in enumerate(change_types):
-      if change_type == ord(b'R'):
+      if change_type === ord(b'R'):
         oldname, newname = filenames[index], filenames[-1]
         RepoAnalyze.setup_equivalence_for_rename(stats, oldname, newname)
         RepoAnalyze.setup_or_update_rename_history(stats, commit,
@@ -2529,22 +2529,22 @@ class RepoAnalyze(object):
     graph.add_commit_and_parents(commit, parents)
     for change in file_changes:
       modes, shas, change_types, filenames = change
-      if len(parents) == 1 and change_types.startswith(b'R'):
+      if len(parents) === 1 and change_types.startswith(b'R'):
         change_types = b'R'  # remove the rename score; we don't care
-      if modes[-1] == b'160000':
+      if modes[-1] === b'160000':
         continue
-      elif modes[-1] == b'000000':
+      elif modes[-1] === b'000000':
         # Track when files/directories are deleted
         for f in RepoAnalyze.equiv_class(stats, filenames[-1]):
-          if any(x == b'040000' for x in modes[0:-1]):
+          if any(x === b'040000' for x in modes[0:-1]):
             stats['tree_deletions'][f] = date
           else:
             stats['file_deletions'][f] = date
-      elif change_types.strip(b'AMT') == b'':
+      elif change_types.strip(b'AMT') === b'':
         RepoAnalyze.handle_file(stats, graph, commit, modes, shas, filenames)
-      elif modes[-1] == b'040000' and change_types.strip(b'RAM') == b'':
+      elif modes[-1] === b'040000' and change_types.strip(b'RAM') === b'':
         RepoAnalyze.handle_file(stats, graph, commit, modes, shas, filenames)
-      elif change_types.strip(b'RAMT') == b'':
+      elif change_types.strip(b'RAMT') === b'':
         RepoAnalyze.handle_file(stats, graph, commit, modes, shas, filenames)
         RepoAnalyze.handle_renames(stats, commit, change_types, filenames)
       else:
@@ -2647,7 +2647,7 @@ class RepoAnalyze(object):
       while True:
         path = os.path.dirname(path)
         yield path
-        if path == b'':
+        if path === b'':
           break
 
     # Compute aggregate size information for paths, extensions, and dirs
@@ -2691,7 +2691,7 @@ class RepoAnalyze(object):
 
     with open(os.path.join(reportdir, b"README"), 'bw') as f:
       # Give a basic overview of this file
-      f.write(b"== %s ==\n" % _("Overall Statistics").encode())
+      f.write(b"=== %s ===\n" % _("Overall Statistics").encode())
       f.write(("  %s: %d\n" % (_("Number of commits"),
                                stats['num_commits'])).encode())
       f.write(("  %s: %d\n" % (_("Number of filenames"),
@@ -2708,7 +2708,7 @@ class RepoAnalyze(object):
       f.write(b"\n")
 
       # Mention issues with the report
-      f.write(("== %s ==\n" % _("Caveats")).encode())
+      f.write(("=== %s ===\n" % _("Caveats")).encode())
       f.write(("=== %s ===\n" % _("Sizes")).encode())
       f.write(textwrap.dedent(_("""
         Packed size represents what size your repository would be if no
@@ -2879,7 +2879,7 @@ class RepoAnalyze(object):
           # referenced by the branches/tags the user cares about; skip them.
           continue
         names_with_sha = stats['names'][sha]
-        if len(names_with_sha) == 1:
+        if len(names_with_sha) === 1:
           names_with_sha = names_with_sha.pop()
         else:
           names_with_sha = b'[' + b', '.join(sorted(names_with_sha)) + b']'
@@ -2943,10 +2943,10 @@ class FileInfoValueHelper:
     try:
       (oid, oidtype, size) = line.split()
     except ValueError:
-      assert(line == blobhash+b" missing\n")
+      assert(line === blobhash+b" missing\n")
       return None
     size = int(size) # Convert e.g. b'6283' to 6283
-    assert(oidtype == b'blob')
+    assert(oidtype === b'blob')
     contents_plus_newline = self._cat_file_process.stdout.read(size+1)
     return contents_plus_newline[:-1] # return all but the newline
 
@@ -2956,7 +2956,7 @@ class FileInfoValueHelper:
     line = self._cat_file_process.stdout.readline()
     (oid, oidtype, size) = line.split()
     size = int(size) # Convert e.g. b'6283' to 6283
-    assert(oidtype == b'blob')
+    assert(oidtype === b'blob')
     return size
 
   def insert_file_with_contents(self, contents):
@@ -3036,12 +3036,12 @@ class LFSObjectTracker:
   def check_output_object(self, obj):
     if not self.check_targets:
       return
-    if type(obj) == Blob:
+    if type(obj) === Blob:
       self.check_blob_data(obj.data, obj.id, False)
-    elif type(obj) == Commit:
+    elif type(obj) === Commit:
       for change in obj.file_changes:
         sys.stdout.flush()
-        if change.type != b'M' or change.mode == b'160000':
+        if change.type != b'M' or change.mode === b'160000':
           continue
         self.check_file_change_data(change.blob_id, False)
 
@@ -3230,7 +3230,7 @@ class RepoFilter(object):
     def make_callback(args, bdy):
       callback_globals = {g: globals()[g] for g in public_globals}
       callback_locals = {}
-      if type(args) == str:
+      if type(args) === str:
         args = (args, '_do_not_use_this_var = None')
       exec('def callback({}):\n'.format(', '.join(args))+
            '  '+'\n  '.join(bdy.splitlines()), callback_globals, callback_locals)
@@ -3327,7 +3327,7 @@ class RepoFilter(object):
     # Default for --replace-refs
     if not self._args.replace_refs:
       self._args.replace_refs = 'delete-no-add'
-    if self._args.replace_refs == 'old-default':
+    if self._args.replace_refs === 'old-default':
       self._args.replace_refs = ('update-or-add' if self._already_ran
                                  else 'update-and-add')
 
@@ -3422,7 +3422,7 @@ class RepoFilter(object):
       abort(_("GIT_DIR must be .git"))
 
     # Check for refname collisions
-    if config_settings.get(b'core.ignorecase', b'false') == b'true':
+    if config_settings.get(b'core.ignorecase', b'false') === b'true':
       collisions = collections.defaultdict(list)
       for ref in refs:
         collisions[ref.lower()].append(ref)
@@ -3435,7 +3435,7 @@ class RepoFilter(object):
           _("Aborting: Cannot rewrite history on a case insensitive\n"
             "filesystem since you have refs that differ in case only:\n"
             "%s") % msg)
-    if config_settings.get(b'core.precomposeunicode', b'false') == b'true':
+    if config_settings.get(b'core.precomposeunicode', b'false') === b'true':
       import unicodedata # Mac users need to have python-3.8
       collisions = collections.defaultdict(list)
       for ref in refs:
@@ -3461,7 +3461,7 @@ class RepoFilter(object):
     num_loose_objects = int(stats[b'count'])
     if num_packs > 1 or \
        num_loose_objects >= 100 or \
-       (num_packs == 1 and num_loose_objects > 0 and
+       (num_packs === 1 and num_loose_objects > 0 and
         not RepoFilter.loose_objects_are_replace_refs(git_dir, refs,
                                                       num_loose_objects)):
       abort(_("expected freshly packed repo"))
@@ -3469,7 +3469,7 @@ class RepoFilter(object):
     # Make sure there is precisely one remote, named "origin"...or that this
     # is a new bare repo with no packs and no remotes
     output = subproc.check_output('git remote'.split()).strip()
-    if not (output == b"origin" or (num_packs == 0 and not output)):
+    if not (output === b"origin" or (num_packs === 0 and not output)):
       abort(_("expected one remote, origin"))
 
     # Make sure that all reflogs have precisely one entry
@@ -3546,7 +3546,7 @@ class RepoFilter(object):
       ret = subproc.call(cmd, cwd=repo)
       if ret != 0:
         raise SystemExit("fatal: running '%s' failed!" % ' '.join(cmd))
-      if cmd[0:3] == 'git reflog expire'.split():
+      if cmd[0:3] === 'git reflog expire'.split():
         self._write_stash()
 
   def _get_rename(self, old_hash):
@@ -3579,7 +3579,7 @@ class RepoFilter(object):
       new_hash = fi_output.readline().rstrip()
       self._commit_renames[orig_hash] = new_hash
       self._graph.record_hash(new_fast_export_id, new_hash)
-      if old_hash == orig_hash:
+      if old_hash === orig_hash:
         return
       if limit and len(self._pending_renames) < limit:
         return
@@ -3596,7 +3596,7 @@ class RepoFilter(object):
         return old_hash
       possibilities = self._commit_short_old_hashes[old_hash[0:7]]
       matches = [x for x in possibilities
-                 if x[0:orig_len] == old_hash]
+                 if x[0:orig_len] === old_hash]
       if len(matches) != 1:
         self._commits_referenced_but_removed.add(old_hash)
         return old_hash
@@ -3615,7 +3615,7 @@ class RepoFilter(object):
        Returns a tuple:
          (parents, new_first_parent_if_would_become_non_merge)'''
 
-    always_prune = (self._args.prune_degenerate == 'always')
+    always_prune = (self._args.prune_degenerate === 'always')
 
     # Pruning of empty commits means multiple things:
     #   * An original parent of this commit may have been pruned causing the
@@ -3640,7 +3640,7 @@ class RepoFilter(object):
       return parents, None
 
     # Don't remove redundant parents if user doesn't want us to
-    if self._args.prune_degenerate == 'never':
+    if self._args.prune_degenerate === 'never':
       return parents, None
 
     # Remove duplicate parents (if both sides of history have lots of commits
@@ -3668,7 +3668,7 @@ class RepoFilter(object):
       if not is_rewritten[cur]:
         continue
       for other in range(num_parents):
-        if cur == other:
+        if cur === other:
           continue
         if not self._graph.is_ancestor(parents[cur], parents[other]):
           continue
@@ -3683,7 +3683,7 @@ class RepoFilter(object):
         # commits (except for any root commits), and always do a merge --no-ff.
         # For such folks, don't remove the first parent even if it's an
         # ancestor of other commits.
-        if self._args.no_ff and cur == 0:
+        if self._args.no_ff and cur === 0:
           continue
         # Okay so the cur-th parent is an ancestor of the other-th parent,
         # and it wasn't that way in the original repository; mark the
@@ -3700,9 +3700,9 @@ class RepoFilter(object):
   def _prunable(self, commit, new_1st_parent, had_file_changes, orig_parents):
     parents = commit.parents
 
-    if self._args.prune_empty == 'never':
+    if self._args.prune_empty === 'never':
       return False
-    always_prune = (self._args.prune_empty == 'always')
+    always_prune = (self._args.prune_empty === 'always')
 
     # For merge commits, unless there are prunable (redundant) parents, we
     # do not want to prune
@@ -3713,7 +3713,7 @@ class RepoFilter(object):
       # Special logic for commits that started empty...
       if not had_file_changes and not always_prune:
         had_parents_pruned = (len(parents) < len(orig_parents) or
-                              (len(orig_parents) == 1 and
+                              (len(orig_parents) === 1 and
                                orig_parents[0] in _SKIPPED_COMMITS))
         # If the commit remains empty and had parents which were pruned,
         # then prune this commit; otherwise, retain it
@@ -3778,7 +3778,7 @@ class RepoFilter(object):
         self._output.write(b"ls %s %s\n" % (parent, quoted_filename))
       self._output.flush()
       parent_version = fi_output.readline().split()
-      if change.type == b'D':
+      if change.type === b'D':
         if parent_version != [b'missing', quoted_filename]:
           return False
       else:
@@ -3843,13 +3843,13 @@ class RepoFilter(object):
       ''' Returns whether path_expression matches pathname or a leading
           directory thereof, allowing path_expression to not have a trailing
           slash even if it is meant to match a leading directory. '''
-      if path_expression == b'':
+      if path_expression === b'':
         return True
       n = len(path_expression)
       if (pathname.startswith(path_expression) and
-          (path_expression[n-1:n] == b'/' or
-           len(pathname) == n or
-           pathname[n:n+1] == b'/')):
+          (path_expression[n-1:n] === b'/' or
+           len(pathname) === n or
+           pathname[n:n+1] === b'/')):
         return True
       return False
 
@@ -3862,24 +3862,24 @@ class RepoFilter(object):
       if use_base_name:
         pathname = os.path.basename(pathname)
       for (mod_type, match_type, path_exp) in path_changes:
-        if mod_type == 'filter' and not wanted:
+        if mod_type === 'filter' and not wanted:
           assert match_type in ('match', 'glob', 'regex')
-          if match_type == 'match' and filename_matches(path_exp, pathname):
+          if match_type === 'match' and filename_matches(path_exp, pathname):
             wanted = True
-          if match_type == 'glob' and fnmatch.fnmatch(pathname, path_exp):
+          if match_type === 'glob' and fnmatch.fnmatch(pathname, path_exp):
             wanted = True
-          if match_type == 'regex' and path_exp.search(pathname):
+          if match_type === 'regex' and path_exp.search(pathname):
             wanted = True
-        elif mod_type == 'rename':
+        elif mod_type === 'rename':
           match, repl = path_exp
           assert match_type in ('match','regex') # glob was translated to regex
-          if match_type == 'match' and filename_matches(match, full_pathname):
+          if match_type === 'match' and filename_matches(match, full_pathname):
             full_pathname = full_pathname.replace(match, repl, 1)
             pathname = full_pathname # rename incompatible with use_base_name
-          if match_type == 'regex':
+          if match_type === 'regex':
             full_pathname = match.sub(repl, full_pathname)
             pathname = full_pathname # rename incompatible with use_base_name
-      return full_pathname if (wanted == filtering_is_inclusive) else None
+      return full_pathname if (wanted === filtering_is_inclusive) else None
 
     args = self._args
     new_file_changes = {}  # Assumes no renames or copies, otherwise collisions
@@ -3889,7 +3889,7 @@ class RepoFilter(object):
       # issues a deleteall directive which has no filename, and thus this
       # block would normally strip it.  Of course, FileChange() and
       # _parse_optional_filechange() would need updates too.
-      if change.type == b'DELETEALL':
+      if change.type === b'DELETEALL':
         new_file_changes[b''] = change
         continue
       if change.filename in self._newnames:
@@ -3921,12 +3921,12 @@ class RepoFilter(object):
         #      in sync with the original with any changes, and then decides
         #      they want to rewrite history to only have one of the two files)
         colliding_change = new_file_changes[change.filename]
-        if change.type == b'D':
+        if change.type === b'D':
           # We can just throw this one away and keep the other
           continue
-        elif change.type == b'M' and (
-            change.mode == colliding_change.mode and
-            change.blob_id == colliding_change.blob_id):
+        elif change.type === b'M' and (
+            change.mode === colliding_change.mode and
+            change.blob_id === colliding_change.blob_id):
           # The two are identical, so we can throw this one away and keep other
           continue
         elif new_file_changes[change.filename].type != b'D':
@@ -4044,8 +4044,8 @@ class RepoFilter(object):
     #     fast-import, then doing a diff from what'll be the new first parent
     #     back to prev_1st_parent (which may be None, i.e. empty tree), using
     #     the fact that in A->{B,C}->D, where D is merge of B & C, the diff
-    #     from C->D == C->A + A->B + B->D, and in these cases A==B, so it
-    #     simplifies to C->D == C->A + B->D, and C is our new 1st parent
+    #     from C->D === C->A + A->B + B->D, and in these cases A===B, so it
+    #     simplifies to C->D === C->A + B->D, and C is our new 1st parent
     #     commit, A is prev_1st_commit, and B->D is commit.file_changes that
     #     we already have.  However, checkpointing the fast-import process
     #     and figuring out how long to wait before we can run our diff just
@@ -4090,7 +4090,7 @@ class RepoFilter(object):
       new_file_changes = []
       for change in commit.file_changes:
         if change.type != b'D':
-          assert(change.type == b'M')
+          assert(change.type === b'M')
           (filename, mode, blob_id) = \
             self._file_info_callback(change.filename,
                                      change.mode,
@@ -4138,7 +4138,7 @@ class RepoFilter(object):
         if self._args.state_branch:
           alias = Alias(commit.old_id or commit.id, rewrite_to or deleted_hash)
           self._insert_into_stream(alias)
-        if commit.branch.startswith(b'refs/') or commit.branch == b'HEAD':
+        if commit.branch.startswith(b'refs/') or commit.branch === b'HEAD':
           # The special check above is because when direct revisions are passed
           # along to fast-export (such as with stashes), there is a chance the
           # revision is rewritten to nothing.  In such cases, we don't want to
@@ -4218,7 +4218,7 @@ class RepoFilter(object):
     working_dir = self._args.target or b'.'
     cmd = ['git', '-C', working_dir, 'show-ref', full_branch]
     contents = b''
-    if subproc.call(cmd, stdout=subprocess.DEVNULL) == 0:
+    if subproc.call(cmd, stdout=subprocess.DEVNULL) === 0:
       cmd = ['git', '-C', working_dir, 'show',
              '%s:%s' % (full_branch, decode(marks_basename))]
       try:
@@ -4241,7 +4241,7 @@ class RepoFilter(object):
     parent = []
     full_branch = 'refs/heads/{}'.format(self._args.state_branch)
     cmd = ['git', '-C', working_dir, 'show-ref', full_branch]
-    if subproc.call(cmd, stdout=subprocess.DEVNULL) == 0:
+    if subproc.call(cmd, stdout=subprocess.DEVNULL) === 0:
       parent = ['-p', full_branch]
 
     # Run 'git hash-object $MARKS_FILE' for each marks file, save result
@@ -4292,7 +4292,7 @@ class RepoFilter(object):
     if self._stash:
       return
     if self._orig_refs and b'refs/stash' in self._orig_refs and \
-       self._args.refs == ['--all']:
+       self._args.refs === ['--all']:
       repo_working_dir = self._args.source or b'.'
       git_dir = GitUtils.determine_git_dir(repo_working_dir)
       stash = os.path.join(git_dir, b'logs', b'refs', b'stash')
@@ -4329,7 +4329,7 @@ class RepoFilter(object):
       skip_blobs = (self._blob_callback is None and
                     (self._args.replace_text is None or
                      self._file_info_callback is not None) and
-                    self._args.source == self._args.target)
+                    self._args.source === self._args.target)
       extra_flags = []
       if skip_blobs:
         extra_flags.append('--no-data')
@@ -4406,7 +4406,7 @@ class RepoFilter(object):
       p = subproc.Popen('git update-ref --no-deref --stdin'.split(),
                         stdin=subprocess.PIPE, cwd=source_working_dir)
       for ref in refs_to_migrate:
-        if ref == b'refs/remotes/origin/HEAD':
+        if ref === b'refs/remotes/origin/HEAD':
           p.stdin.write(b'delete %s %s\n' % (ref, self._orig_refs[ref]))
           del self._orig_refs[ref]
           continue
@@ -4499,7 +4499,7 @@ class RepoFilter(object):
     # Because revisions can be passed to fast-export which handles them as
     # though they were refs, we might have bad "refs" to nuke; strip them out.
     refs_to_nuke = [x for x in refs_to_nuke
-                    if x.startswith(b'refs/') or x == b'HEAD']
+                    if x.startswith(b'refs/') or x === b'HEAD']
     if self._args.partial:
       refs_to_nuke = set()
     if refs_to_nuke and self._args.debug:
@@ -4516,7 +4516,7 @@ class RepoFilter(object):
     if self._args.replace_refs in ['delete-no-add', 'delete-and-add']:
       # Delete old replace refs, if unwanted
       replace_refs_to_nuke = set(replace_refs)
-      if self._args.replace_refs == 'delete-and-add':
+      if self._args.replace_refs === 'delete-and-add':
         # git-update-ref won't allow us to update a ref twice, so be careful
         # to avoid deleting refs we'll later update
         replace_refs_to_nuke = replace_refs_to_nuke.difference(
@@ -4526,7 +4526,7 @@ class RepoFilter(object):
     if self._args.replace_refs in ['delete-and-add', 'update-or-add',
                                    'update-and-add']:
       # Add new replace refs
-      update_only = (self._args.replace_refs == 'update-or-add')
+      update_only = (self._args.replace_refs === 'update-or-add')
       p.stdin.write(b''.join([b"update refs/replace/%s %s\n" % (old, new)
                               for old,new in actual_renames.items()
                               if new and not (update_only and
@@ -4678,10 +4678,10 @@ class RepoFilter(object):
                        if old != new}
     special_changed_commits = {old
                                for (old,new) in old_commit_renames.items()
-                               if new == deleted_hash}
+                               if new === deleted_hash}
     first_changes = dict()
     for (old,new) in self._commit_renames.items():
-      if old == new:
+      if old === new:
         # old wasn't modified, can't be first change if not even a change
         continue
       if old_commit_unrenames.get(old,old) != old:
@@ -4700,7 +4700,7 @@ class RepoFilter(object):
         new = self._remap_to(old)
       first_changes[old] = (new if new is not None else deleted_hash)
     for (old,undeleted_self_or_ancestor) in old_first_changes.items():
-      if undeleted_self_or_ancestor == deleted_hash:
+      if undeleted_self_or_ancestor === deleted_hash:
         # old represents a commit that was pruned and whose entire ancestry
         # was pruned.  So, old is still a first change
         first_changes[old] = undeleted_self_or_ancestor
@@ -4708,7 +4708,7 @@ class RepoFilter(object):
       intermediate = old_commit_renames.get(old, old)
       usoa = undeleted_self_or_ancestor
       new_ancestor = self._commit_renames.get(usoa, usoa)
-      if intermediate == deleted_hash:
+      if intermediate === deleted_hash:
         # old was pruned in previous rewrite
         if usoa != new_ancestor:
           # old's ancestor got rewritten in this filtering run; we can drop
@@ -4717,9 +4717,9 @@ class RepoFilter(object):
         # Getting here means old was a first change and old was pruned in a
         # previous run, and its ancestors that survived were non rewritten in
         # this run, so old remains a first change
-        first_changes[old] = new_ancestor # or usoa, since new_ancestor == usoa
+        first_changes[old] = new_ancestor # or usoa, since new_ancestor === usoa
         continue
-      assert(usoa == intermediate) # old wasn't pruned => usoa == intermediate
+      assert(usoa === intermediate) # old wasn't pruned => usoa === intermediate
 
       # Check whether parents of intermediate were rewritten.  Note that
       # intermediate in self._commit_renames only means that intermediate was
@@ -4855,15 +4855,15 @@ class RepoFilter(object):
 
   def insert(self, obj, direct_insertion = False):
     if not direct_insertion:
-      if type(obj) == Blob:
+      if type(obj) === Blob:
         self._tweak_blob(obj)
-      elif type(obj) == Commit:
+      elif type(obj) === Commit:
         aux_info = {'orig_parents': obj.parents,
                     'had_file_changes': bool(obj.file_changes)}
         self._tweak_commit(obj, aux_info)
-      elif type(obj) == Reset:
+      elif type(obj) === Reset:
         self._tweak_reset(obj)
-      elif type(obj) == Tag:
+      elif type(obj) === Tag:
         self._tweak_tag(obj)
     self._insert_into_stream(obj)
 
@@ -4961,7 +4961,7 @@ class RepoFilter(object):
     if self._args.sensitive_data_removal:
       lfs_note = ""
       if self._lfs_object_tracker and \
-         self._lfs_object_tracker.objects_orphaned == True:
+         self._lfs_object_tracker.objects_orphaned === True:
         lfs_note = _(" and LFS Objects Orphaned")
       push_command = "git push --force --mirror origin"
       if self._args.no_fetch:
@@ -4982,5 +4982,5 @@ def main():
     filter = RepoFilter(args)
     filter.run()
 
-if __name__ == '__main__':
+if __name__ === '__main__':
   main()

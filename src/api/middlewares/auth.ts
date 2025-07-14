@@ -2,10 +2,9 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 import { Request, Response, NextFunction } from "express";
-import { users } from "./../model/model.users";
+import { users, IUser } from "./../model/model.users";
 import { user_sessions } from "./../model/model.user_sessions";
 import { errorRes, authFailRes } from "./../../util/response_functions";
-
 const TOKEN_KEY = process.env.TOKEN_KEY as string;
 if (!TOKEN_KEY) {
   throw new Error("Missing TOKEN_KEY in environment variables");
@@ -16,7 +15,10 @@ interface DecodedToken extends JwtPayload {
 }
 
 interface AuthenticatedRequest extends Request {
-  user?: any;
+  user?: IUser & {
+    token?: string;
+    is_blocked_by_admin: boolean;
+  };
 }
 
 const getBearerToken = (authHeader?: string): string | null => {
@@ -67,11 +69,11 @@ const verifyToken = async (
     req.user = findUsers;
     req.user.token = bearerToken;
     next();
-  } catch (error: any) {
-    if (error.message === "jwt malformed") {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "jwt malformed") {
       return void authFailRes(res, "Authentication failed.");
     }
-    console.log("jwt::::::::::", error.message);
+    console.log("jwt::::::::::", error);
     return void errorRes(res, "Internal server error");
   }
 };
@@ -111,11 +113,11 @@ const verifyTokenCreateProfile = async (
     req.user = findUsers;
     req.user.token = bearerToken;
     next();
-  } catch (error: any) {
-    if (error.message === "jwt malformed") {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "jwt malformed") {
       return void authFailRes(res, "Authentication failed.");
     }
-    console.log("jwt::::::::::", error.message);
+    console.log("jwt::::::::::", error);
     return void errorRes(res, "Internal server error");
   }
 };
@@ -156,11 +158,11 @@ const verifyTokenLogout = async (
     req.user = findUsers;
     req.user.token = bearerToken;
     next();
-  } catch (error: any) {
-    if (error.message === "jwt malformed") {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "jwt malformed") {
       return void authFailRes(res, "Authentication failed.");
     }
-    console.log("jwt::::::::::", error.message);
+    console.log("jwt::::::::::", error);
     return void errorRes(res, "Internal server error");
   }
 };

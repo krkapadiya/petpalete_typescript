@@ -8,7 +8,7 @@ interface ForgotPasswordData {
 
 export const sendOtpForgotPasswordAdmin = async (
   data: ForgotPasswordData,
-): Promise<any> => {
+): Promise<unknown> => {
   const transporter = nodemailer.createTransport({
     host: process.env.MAIL_HOST,
     port: Number(process.env.MAIL_PORT),
@@ -55,7 +55,7 @@ export const sendOtpForgotPasswordAdmin = async (
 
 export const sendOtpForgotPassword = async (
   data: ForgotPasswordData,
-): Promise<any> => {
+): Promise<unknown> => {
   const transporter = nodemailer.createTransport({
     host: process.env.MAIL_HOST,
     port: Number(process.env.MAIL_PORT),

@@ -17,12 +17,17 @@ const i18n_1 = __importDefault(require("i18n"));
 const model_communities_1 = require("../../../model/model.communities");
 const model_users_1 = require("../../../model/model.users");
 const model_guests_1 = require("../../../model/model.guests");
-const model_notifications_1 = require("./../../../model/model.notifications");
+const model_notifications_1 = require("../../../model/model.notifications");
 const model_communities_albums_1 = require("../../../model/model.communities_albums");
-const response_functions_1 = require("./../../../../util/response_functions");
-const user_function_1 = require("./../../../../util/user_function");
-const send_notifications_1 = require("./../../../../util/send_notifications");
-const bucket_manager_1 = require("./../../../../util/bucket_manager");
+// type UserWithId = { _id: string | ObjectId };
+const response_functions_1 = require("../../../../util/response_functions");
+const user_function_1 = require("../../../../util/user_function");
+const send_notifications_1 = require("../../../../util/send_notifications");
+const bucket_manager_1 = require("../../../../util/bucket_manager");
+// interface CommunityDoc {
+//   _id: string; // or ObjectId if you're using Mongoose's ObjectId
+//   [key: string]: unknown;
+// }
 const addCommunity = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user_id = req.user._id;
@@ -38,11 +43,11 @@ const addCommunity = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             const location_json_parse = JSON.parse(location);
             insert_data.location = location_json_parse;
         }
-        const newCommunity = (yield model_communities_1.communities.create(insert_data));
+        const newCommunity = yield model_communities_1.communities.create(insert_data);
         if (newCommunity) {
             const userObjectId = yield (0, user_function_1.objectId)(user_id);
             const location_parse = JSON.parse(location);
-            const find_nearby_users = yield model_users_1.users.find({
+            const find_nearby_users = (yield model_users_1.users.find({
                 _id: { $ne: user_id },
                 is_deleted: false,
                 is_blocked_by_admin: false,
@@ -58,7 +63,8 @@ const addCommunity = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                         $maxDistance: 160934, // 50 miles
                     },
                 },
-            });
+            }));
+            const nearUserIds = find_nearby_users.map((user) => user._id.toString());
             const find_nearby_guest_users = yield model_guests_1.guests.find({
                 location: {
                     $near: {
@@ -73,7 +79,6 @@ const addCommunity = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                     },
                 },
             });
-            const nearUserIds = find_nearby_users.map((user) => user._id.toString());
             const nearUserDeviceTokens = find_nearby_guest_users.map((user) => user.device_token);
             const deviceTokenData = yield (0, user_function_1.findMultipleUserDeviceToken)(nearUserIds);
             const noti_msg = "Don’t miss out! Someone shared something in the community.";
@@ -140,7 +145,7 @@ const addMultipleServices = (req, res) => __awaiter(void 0, void 0, void 0, func
             const newService = yield model_communities_1.communities.create(insert_data);
             const fileData = {
                 user_id: user_id,
-                community_id: newService._id,
+                community_id: newService._id.toString(),
                 album_type: "image",
                 album_thumbnail: null,
                 album_path: "community_media/8324_1749737660281.jpg",
@@ -213,11 +218,11 @@ const deleteCommunity = (req, res) => __awaiter(void 0, void 0, void 0, function
             return;
         }
         const response = yield (0, user_function_1.findCommunityAlbums)(user_id, community_id);
-        // Type guard: check if response is an array
+        const toAlbums = (val) => Array.isArray(val) ? val : [];
         const albums = Array.isArray(response)
-            ? response
-            : Array.isArray(response === null || response === void 0 ? void 0 : response.data)
-                ? response.data
+            ? toAlbums(response)
+            : Array.isArray(response.data)
+                ? toAlbums(response.data)
                 : [];
         for (const element of albums) {
             if (element.album_type === "video") {
@@ -249,6 +254,7 @@ const deleteCommunity = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.deleteCommunity = deleteCommunity;
 const uploadCommunityMedia = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
         const user_id = req.user._id;
         const { community_id, album_type, ln } = req.body;
@@ -259,8 +265,12 @@ const uploadCommunityMedia = (req, res) => __awaiter(void 0, void 0, void 0, fun
             yield (0, response_functions_1.errorRes)(res, res.__("No files were uploaded."));
             return;
         }
-        let album = req.files["album"];
-        let thumbnail = req.files["thumbnail"];
+        const convertToMediaFile = (file) => ({
+            originalFilename: file.originalname,
+            path: file.path,
+        });
+        let album = ((_a = req.files["album"]) === null || _a === void 0 ? void 0 : _a.map(convertToMediaFile)) || [];
+        let thumbnail = ((_b = req.files["thumbnail"]) === null || _b === void 0 ? void 0 : _b.map(convertToMediaFile)) || [];
         if (!album) {
             yield (0, response_functions_1.errorRes)(res, res.__("Album file is missing."));
             return;
@@ -278,8 +288,8 @@ const uploadCommunityMedia = (req, res) => __awaiter(void 0, void 0, void 0, fun
         const uploadedFiles = [];
         for (let i = 0; i < albumType.length; i++) {
             const album_type_i = albumType[i];
-            const media = album[i];
-            const content_type = media.type;
+            const media = thumbnail[0];
+            const content_type = media.mimetype || "image/jpeg";
             const res_upload_file = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(media, folder_name, content_type);
             if (res_upload_file.status) {
                 const user_image_path = `${folder_name}/` + res_upload_file.file_name;
@@ -299,7 +309,7 @@ const uploadCommunityMedia = (req, res) => __awaiter(void 0, void 0, void 0, fun
                 if (album_type_i === "video") {
                     let thumbnail_image_path = null;
                     if (thumbnail && thumbnail[i]) {
-                        const res_upload_thumb = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(thumbnail[i], folder_name_thumbnail, thumbnail[i].type);
+                        const res_upload_thumb = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(thumbnail[i], folder_name_thumbnail, "image/jpeg");
                         if (res_upload_thumb.status) {
                             thumbnail_image_path = `${folder_name_thumbnail}/${res_upload_thumb.file_name}`;
                         }
@@ -341,7 +351,7 @@ const removeCommunityMedia = (req, res) => __awaiter(void 0, void 0, void 0, fun
         const { album_id, ln } = req.body;
         i18n_1.default.setLocale(req, ln);
         const userAlbum = yield (0, user_function_1.findCommunityAlbumById)(album_id, user_id);
-        if (!userAlbum || (userAlbum === null || userAlbum === void 0 ? void 0 : userAlbum.data)) {
+        if (!userAlbum || userAlbum.status === "error") {
             yield (0, response_functions_1.errorRes)(res, res.__("Album not found."));
             return;
         }
@@ -586,7 +596,7 @@ const communityListing = (req, res) => __awaiter(void 0, void 0, void 0, functio
         const { search = "", page = 1, limit = 10, lat, long, miles_distance = 100, ln, } = req.body;
         i18n_1.default.setLocale(req, ln);
         const escapedSearch = search ? yield (0, user_function_1.escapeRegex)(search) : null;
-        let query = {
+        const query = {
             is_deleted: false,
             user_id: { $ne: user_id },
         };
@@ -782,7 +792,7 @@ const guestCommunityListing = (req, res) => __awaiter(void 0, void 0, void 0, fu
         const { search = "", page = 1, limit = 10, lat, long, miles_distance = 100, ln, } = req.body;
         i18n_1.default.setLocale(req, ln);
         const escapedSearch = search ? yield (0, user_function_1.escapeRegex)(search) : null;
-        let query = {
+        const query = {
             is_deleted: false,
         };
         if (lat && long) {

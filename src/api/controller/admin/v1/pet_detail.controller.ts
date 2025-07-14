@@ -15,7 +15,6 @@ import {
   escapeRegex,
   objectId,
 } from "./../../../../util/user_function";
-import { string } from "joi";
 
 export const allPetList = async (
   req: Request,
@@ -39,7 +38,7 @@ export const allPetList = async (
 
     const escapedSearch = search ? await escapeRegex(search) : null;
 
-    const query: Record<string, any> = {
+    const query: Record<string, unknown> = {
       is_deleted: false,
     };
 

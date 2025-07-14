@@ -18,6 +18,8 @@ import i18n from "i18n";
 import { socketErrorRes } from "./../../util/response_functions";
 import { socketAuth } from "./../../api/middlewares/socketAuth";
 import { Server } from "socket.io";
+import { SocketWithUser } from "./../config/socket";
+
 import {
   SetSocketIdData,
   DisconnectSocketData,
@@ -27,9 +29,6 @@ import {
 import {
   CreateRoomData,
   SendMessageData,
-  MediaFileData,
-  ChatInsertData,
-  NotiData,
   getAllMessageData,
   editMessageData,
   deleteMessageData,
@@ -37,13 +36,12 @@ import {
   deleteChatRoomData,
   chatUserListData,
   changeScreenStatusData,
-  updatedChatRoom,
 } from "./chat";
 
 export default (io: Server) => {
   const v1version = io.of("/v1");
   v1version.use(socketAuth);
-  v1version.on("connection", (socket: any) => {
+  v1version.on("connection", (socket: SocketWithUser) => {
     console.log("Socket connected  v1.....", socket.id);
 
     socket.on(
@@ -53,11 +51,11 @@ export default (io: Server) => {
           data = {
             ...data,
             socket_id: socket.id,
-            user_id: socket.user._id,
+            user_id: (socket.user as { _id: string })._id,
           };
           console.log("setSocketId  on :: ", data);
 
-          socket.join(data.user_id as unknown as string);
+          socket.join(data.user_id as string);
 
           const { ln = "en" } = data;
           i18n.setLocale(ln);
@@ -367,41 +365,35 @@ export default (io: Server) => {
           if (deleteMessageForEveryOneData.success) {
             v1version
               .to(data.chat_room_id as string)
-              .emit("deleteMessageForEveryOne", deleteMessageForEveryOneData);
-
-            if (deleteMessageForEveryOneData.data.isLastMessage) {
               const senderChatListData = await updatedChatRoomData({
-                user_id: deleteMessageForEveryOneData.data.sender_id as string,
-                chat_room_id: deleteMessageForEveryOneData.data
-                  .chat_room_id as string,
+                user_id: data.sender_id as string,
+                chat_room_id: data.chat_room_id as string,
               });
               v1version
-                .to(deleteMessageForEveryOneData.data.sender_id as string)
+                .to(data.sender_id as string)
                 .emit("updatedChatRoomData", senderChatListData);
 
               const receiverChatListData = await updatedChatRoomData({
-                user_id: deleteMessageForEveryOneData.data
-                  .receiver_id as string,
-                chat_room_id: deleteMessageForEveryOneData.data
-                  .chat_room_id as string,
+                user_id: data.receiver_id as string,
+                chat_room_id: data.chat_room_id as string,
               });
               v1version
-                .to(deleteMessageForEveryOneData.data.receiver_id.toString())
+                .to(data.receiver_id as string)
                 .emit("updatedChatRoomData", receiverChatListData);
+            } else {
+              v1version
+                .to(data.chat_room_id as string)
+                .emit("sendMessage", newMessage);
             }
-          } else {
-            socket.emit(
-              "deleteMessageForEveryOne",
-              deleteMessageForEveryOneData,
+            return;
+          } catch (error) {
+            console.log(
+              "sendMessage Error ON:",
+              error instanceof Error ? error.message : String(error),
             );
+            return socketErrorRes(i18n.__("Something went wrong!"));
           }
-          return;
-        } catch (error) {
-          console.log(
-            "deleteMessage Error ON:",
-            error instanceof Error ? error.message : String(error),
-          );
-          return socketErrorRes(i18n.__("Something went wrong!"));
+        });
         }
       },
     );

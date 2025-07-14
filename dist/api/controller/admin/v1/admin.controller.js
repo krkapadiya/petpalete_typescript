@@ -185,7 +185,7 @@ const adminVerifyOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
             yield (0, response_functions_1.errorRes)(res, res.__("No account associated with this email address was found."));
             return;
         }
-        if (find_admin.otp == otp) {
+        if (find_admin.otp === otp) {
             const update_data = {
                 otp: null,
             };

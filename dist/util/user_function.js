@@ -132,8 +132,8 @@ const findMultipleUserDeviceToken = (user_ids) => __awaiter(void 0, void 0, void
             .distinct("device_token");
     }
     catch (error) {
-        console.error("Error:", error);
-        return (0, response_functions_1.InternalErrorRes)();
+        console.error("Error fetching device tokens:", error);
+        return [];
     }
 });
 exports.findMultipleUserDeviceToken = findMultipleUserDeviceToken;
@@ -298,8 +298,8 @@ const findCommunityAlbumById = (album_id, user_id) => __awaiter(void 0, void 0, 
         return album_data_by_id;
     }
     catch (error) {
-        console.log("Error : ", error);
-        return (0, response_functions_1.InternalErrorRes)();
+        console.error("Error finding community album:", error);
+        return null;
     }
 });
 exports.findCommunityAlbumById = findCommunityAlbumById;

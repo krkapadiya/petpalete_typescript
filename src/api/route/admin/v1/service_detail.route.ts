@@ -1,6 +1,7 @@
 import express from "express";
 const admin_router = express.Router();
-const multipartMiddleware = require("connect-multiparty")();
+import multipart from "connect-multiparty";
+const multipartMiddleware = multipart();
 import { userAuth } from "../../../middlewares/auth";
 import { validateRequest } from "../../../middlewares/validation";
 

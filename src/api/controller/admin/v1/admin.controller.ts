@@ -298,7 +298,7 @@ export const adminVerifyOtp = async (
       return;
     }
 
-    if (find_admin.otp == otp) {
+    if (find_admin.otp === otp) {
       const update_data = {
         otp: null,
       };

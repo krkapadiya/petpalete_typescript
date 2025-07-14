@@ -1,16 +1,21 @@
 import { removeFile } from "./../../util/remove_file";
 import { errorRes } from "../../util/response_functions";
 import { Request, Response, NextFunction } from "express";
-import express from "express";
-
-interface FileRequest extends Request {
+import { File as MulterFile } from "multer";
+export interface FileRequest extends Request {
   files?:
-    | Express.Multer.File[]
-    | { [fieldname: string]: Express.Multer.File[] };
-  body: any;
+    | MulterFile[] // e.g. req.files as array
+    | { [fieldname: string]: MulterFile[] }; // e.g. req.files as object
+
+  body: Record<string, unknown>;
 }
 
-export const validateRequest = (schema: any) => {
+export const validateRequest = (schema: {
+  validate: (
+    data: unknown,
+    options?: { abortEarly?: boolean },
+  ) => { error?: Error };
+}) => {
   return async (
     req: FileRequest,
     res: Response,
@@ -33,26 +38,27 @@ export const validateRequest = (schema: any) => {
       }
 
       next();
-    } catch (error: any) {
+    } catch (error: unknown) {
       const { body, files } = req;
 
       if (Array.isArray(files)) {
-        // Case when `files` is an array (multer single/multiple)
         for (const file of files) {
-          if (file.fieldname && body[file.fieldname]) {
-            removeFile(body[file.fieldname]);
+          const fieldValue = body[file.fieldname];
+          if (file.fieldname && fieldValue && typeof fieldValue === "string") {
+            removeFile(fieldValue);
           }
         }
       } else if (files && typeof files === "object") {
-        // Case when `files` is an object (multer.fields)
         for (const field in files) {
-          if (body[field]) {
-            removeFile(body[field]);
+          const fieldValue = body[field];
+          if (fieldValue && typeof fieldValue === "string") {
+            removeFile(fieldValue);
           }
         }
       }
 
-      const errorMsg = error?.details?.[0]?.message || "Validation failed";
+      const errorMsg =
+        error instanceof Error ? error.message : "Validation failed";
       await errorRes(res, errorMsg);
     }
   };

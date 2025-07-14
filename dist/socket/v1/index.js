@@ -18,7 +18,7 @@ const i18n_1 = __importDefault(require("i18n"));
 const response_functions_1 = require("./../../util/response_functions");
 const socketAuth_1 = require("./../../api/middlewares/socketAuth");
 exports.default = (io) => {
-    var v1version = io.of("/v1");
+    const v1version = io.of("/v1");
     v1version.use(socketAuth_1.socketAuth);
     v1version.on("connection", (socket) => {
         console.log("Socket connected  v1.....", socket.id);
@@ -49,7 +49,7 @@ exports.default = (io) => {
                 data = {
                     socket_id: socket.id,
                 };
-                let disconnect_user = yield (0, connect_1.disconnectSocket)(data, v1version);
+                const disconnect_user = yield (0, connect_1.disconnectSocket)(data, v1version);
                 if (disconnect_user.success) {
                     console.log({ disconnect_user });
                     v1version.emit("userIsOffline", disconnect_user);
@@ -67,7 +67,7 @@ exports.default = (io) => {
                 data = Object.assign(Object.assign({}, data), { user_id: socket.user._id });
                 console.log("createRoom  on :: ", data);
                 const createRoomData = yield (0, chat_1.createRoom)(data);
-                let { ln = "en" } = data;
+                const { ln = "en" } = data;
                 i18n_1.default.setLocale(ln);
                 // socket.join(createRoomData.data._id.toString());
                 socket.emit("createRoom", createRoomData);
@@ -82,7 +82,7 @@ exports.default = (io) => {
             try {
                 data = Object.assign(Object.assign({}, data), { user_id: socket.user._id });
                 console.log("chatUserList  on :: ", data);
-                let { ln = "en" } = data;
+                const { ln = "en" } = data;
                 i18n_1.default.setLocale(ln);
                 socket.join(data.user_id);
                 const find_user_list = yield (0, chat_1.chatUserList)(data);
@@ -98,20 +98,20 @@ exports.default = (io) => {
             try {
                 data = Object.assign(Object.assign({}, data), { sender_id: socket.user._id });
                 console.log("sendMessage  on :: ", data);
-                let newMessage = yield (0, chat_1.sendMessage)(data);
+                const newMessage = yield (0, chat_1.sendMessage)(data);
                 if (newMessage.success) {
                     socket.join(data.chat_room_id);
                     v1version
                         .to(data.chat_room_id)
                         .emit("sendMessage", newMessage);
-                    let senderChatListData = yield (0, chat_1.updatedChatRoomData)({
+                    const senderChatListData = yield (0, chat_1.updatedChatRoomData)({
                         user_id: data.sender_id,
                         chat_room_id: data.chat_room_id,
                     });
                     v1version
                         .to(data.sender_id)
                         .emit("updatedChatRoomData", senderChatListData);
-                    let receiverChatListData = yield (0, chat_1.updatedChatRoomData)({
+                    const receiverChatListData = yield (0, chat_1.updatedChatRoomData)({
                         user_id: data.receiver_id,
                         chat_room_id: data.chat_room_id,
                     });
@@ -156,14 +156,14 @@ exports.default = (io) => {
                         .to(data.chat_room_id)
                         .emit("editMessage", editMessageData);
                     if (editMessageData.data.isLastMessage) {
-                        let senderChatListData = yield (0, chat_1.updatedChatRoomData)({
+                        const senderChatListData = yield (0, chat_1.updatedChatRoomData)({
                             user_id: editMessageData.data.sender_id,
                             chat_room_id: editMessageData.data.chat_room_id,
                         });
                         v1version
                             .to(editMessageData.data.sender_id.toString())
                             .emit("updatedChatRoomData", senderChatListData);
-                        let receiverChatListData = yield (0, chat_1.updatedChatRoomData)({
+                        const receiverChatListData = yield (0, chat_1.updatedChatRoomData)({
                             user_id: editMessageData.data.receiver_id,
                             chat_room_id: editMessageData.data.chat_room_id,
                         });
@@ -192,7 +192,7 @@ exports.default = (io) => {
                     .to(data.chat_room_id)
                     .emit("readMessage", readMessages);
                 // socket.to(data.user_id.toString()).emit("msgReadByUser", readMessages);
-                let senderChatListData = yield (0, chat_1.updatedChatRoomData)({
+                const senderChatListData = yield (0, chat_1.updatedChatRoomData)({
                     user_id: data.user_id,
                     chat_room_id: data.chat_room_id,
                 });
@@ -216,7 +216,7 @@ exports.default = (io) => {
                     v1version
                         .to(data.chat_room_id)
                         .emit("deleteMessage", deleteMessageData);
-                    let userChatListData = yield (0, chat_1.updatedChatRoomData)({
+                    const userChatListData = yield (0, chat_1.updatedChatRoomData)({
                         user_id: data.user_id,
                         chat_room_id: data.chat_room_id,
                     });
@@ -242,68 +242,67 @@ exports.default = (io) => {
                 const deleteMessageForEveryOneData = yield (0, chat_1.deleteMessageForEveryOne)(data);
                 if (deleteMessageForEveryOneData.success) {
                     v1version
-                        .to(data.chat_room_id)
-                        .emit("deleteMessageForEveryOne", deleteMessageForEveryOneData);
-                    if (deleteMessageForEveryOneData.data.isLastMessage) {
-                        let senderChatListData = yield (0, chat_1.updatedChatRoomData)({
-                            user_id: deleteMessageForEveryOneData.data.sender_id,
-                            chat_room_id: deleteMessageForEveryOneData.data
-                                .chat_room_id,
-                        });
-                        v1version
-                            .to(deleteMessageForEveryOneData.data.sender_id)
-                            .emit("updatedChatRoomData", senderChatListData);
-                        let receiverChatListData = yield (0, chat_1.updatedChatRoomData)({
-                            user_id: deleteMessageForEveryOneData.data
-                                .receiver_id,
-                            chat_room_id: deleteMessageForEveryOneData.data
-                                .chat_room_id,
-                        });
-                        v1version
-                            .to(deleteMessageForEveryOneData.data.receiver_id.toString())
-                            .emit("updatedChatRoomData", receiverChatListData);
-                    }
-                }
-                else {
-                    socket.emit("deleteMessageForEveryOne", deleteMessageForEveryOneData);
-                }
-                return;
-            }
-            catch (error) {
-                console.log("deleteMessage Error ON:", error instanceof Error ? error.message : String(error));
-                return (0, response_functions_1.socketErrorRes)(i18n_1.default.__("Something went wrong!"));
-            }
-        }));
-        socket.on("deleteChatRoom", (data) => __awaiter(void 0, void 0, void 0, function* () {
-            try {
-                data = Object.assign(Object.assign({}, data), { user_id: socket.user._id });
-                console.log("deleteChatRoom  on :: ", data);
-                const deleteChatData = yield (0, chat_1.deleteChatRoom)(data);
-                if (deleteChatData.success) {
+                        .to(data.chat_room_id);
+                    const senderChatListData = yield (0, chat_1.updatedChatRoomData)({
+                        user_id: data.sender_id,
+                        chat_room_id: data.chat_room_id,
+                    });
                     v1version
-                        .to(data.user_id)
-                        .emit("deleteChatRoom", deleteChatData);
+                        .to(data.sender_id)
+                        .emit("updatedChatRoomData", senderChatListData);
+                    const receiverChatListData = yield (0, chat_1.updatedChatRoomData)({
+                        user_id: data.receiver_id,
+                        chat_room_id: data.chat_room_id,
+                    });
+                    v1version
+                        .to(data.receiver_id)
+                        .emit("updatedChatRoomData", receiverChatListData);
                 }
                 else {
-                    socket.emit("deleteChatRoom", deleteChatData);
+                    v1version
+                        .to(data.chat_room_id)
+                        .emit("sendMessage", newMessage);
                 }
                 return;
             }
             catch (error) {
-                console.log("deleteChatRoom Error ON:", error instanceof Error ? error.message : String(error));
+                console.log("sendMessage Error ON:", error instanceof Error ? error.message : String(error));
                 return (0, response_functions_1.socketErrorRes)(i18n_1.default.__("Something went wrong!"));
-            }
-        }));
-        socket.on("changeScreenStatus", (data) => __awaiter(void 0, void 0, void 0, function* () {
-            try {
-                data = Object.assign(Object.assign({}, data), { user_id: socket.user._id, socket_id: socket.id });
-                console.log(" -----------  changeScreenStatus  -----------  ", data);
-                let change_screen_status = yield (0, chat_1.changeScreenStatus)(data);
-                socket.emit("changeScreenStatus", change_screen_status);
-            }
-            catch (error) {
-                console.log("=== changeScreenStatus ===", error instanceof Error ? error.message : String(error));
             }
         }));
     });
 };
+;
+socket.on("deleteChatRoom", (data) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        data = Object.assign(Object.assign({}, data), { user_id: socket.user._id });
+        console.log("deleteChatRoom  on :: ", data);
+        const deleteChatData = yield (0, chat_1.deleteChatRoom)(data);
+        if (deleteChatData.success) {
+            v1version
+                .to(data.user_id)
+                .emit("deleteChatRoom", deleteChatData);
+        }
+        else {
+            socket.emit("deleteChatRoom", deleteChatData);
+        }
+        return;
+    }
+    catch (error) {
+        console.log("deleteChatRoom Error ON:", error instanceof Error ? error.message : String(error));
+        return (0, response_functions_1.socketErrorRes)(i18n_1.default.__("Something went wrong!"));
+    }
+}));
+socket.on("changeScreenStatus", (data) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        data = Object.assign(Object.assign({}, data), { user_id: socket.user._id, socket_id: socket.id });
+        console.log(" -----------  changeScreenStatus  -----------  ", data);
+        const change_screen_status = yield (0, chat_1.changeScreenStatus)(data);
+        socket.emit("changeScreenStatus", change_screen_status);
+    }
+    catch (error) {
+        console.log("=== changeScreenStatus ===", error instanceof Error ? error.message : String(error));
+    }
+}));
+;
+;

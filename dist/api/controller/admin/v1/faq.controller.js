@@ -159,8 +159,8 @@ const activeDeactiveFaq = (req, res) => __awaiter(void 0, void 0, void 0, functi
             yield (0, response_functions_1.errorRes)(res, res.__("The FAQ was not found."));
             return;
         }
-        if (is_active == true || is_active == "true") {
-            if (find_faq.is_active == true) {
+        if (is_active === true || is_active === "true") {
+            if (find_faq.is_active === true) {
                 yield (0, response_functions_1.successRes)(res, res.__("The FAQ is already activated."), []);
                 return;
             }
@@ -176,8 +176,8 @@ const activeDeactiveFaq = (req, res) => __awaiter(void 0, void 0, void 0, functi
                 return;
             }
         }
-        if (is_active == false || is_active == "false") {
-            if (find_faq.is_active == false) {
+        if (is_active === false || is_active === "false") {
+            if (find_faq.is_active === false) {
                 yield (0, response_functions_1.successRes)(res, res.__("The FAQ is already deactivated."), []);
                 return;
             }

@@ -28,7 +28,7 @@ const securePassword = (password) => __awaiter(void 0, void 0, void 0, function*
 exports.securePassword = securePassword;
 const comparePassword = (password, dbPassword) => __awaiter(void 0, void 0, void 0, function* () {
     const originalPwd = yield (0, exports.decryptPassword)(dbPassword);
-    if (originalPwd == password) {
+    if (originalPwd === password) {
         return true;
     }
     else {

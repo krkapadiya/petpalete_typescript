@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InternalErrorRes = exports.socketErrorRes = exports.socketMultiSuccessRes = exports.socketSuccessRes = exports.webAuthFailRes = exports.maintenanceMode = exports.authFailRes = exports.errorRes = exports.manyMultiSuccessRes = exports.tokenSuccessRes = exports.countMultiSuccessRes = exports.multiSuccessRes = exports.warningRes = exports.successRes = void 0;
-// ========== Express Response Handlers ==========
+// ============ Express Response Handlers ============
 const successRes = (res, msg, data) => __awaiter(void 0, void 0, void 0, function* () {
     return res.send({
         success: true,
@@ -102,7 +102,7 @@ const webAuthFailRes = (res, msg) => __awaiter(void 0, void 0, void 0, function*
     });
 });
 exports.webAuthFailRes = webAuthFailRes;
-// ========== Socket Response Handlers ==========
+// ============ Socket Response Handlers ============
 const socketSuccessRes = (msg, data) => __awaiter(void 0, void 0, void 0, function* () {
     return {
         success: true,

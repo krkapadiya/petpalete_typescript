@@ -10,7 +10,9 @@ const projectId = process.env.PROJECT_ID || "your-project-id";
 // Manually map snake_case to camelCase to satisfy ServiceAccount type
 const serviceAccount: ServiceAccount = {
   clientEmail: serviceAccountData.client_email,
-  privateKey: serviceAccountData.private_key,
+  privateKey: serviceAccountData.private_key
+    .replace(/\n/g, "\n")
+    .replace(/\\n/g, "\n"),
   projectId: serviceAccountData.project_id,
 };
 
@@ -49,9 +51,10 @@ const subscribeToTopic = async (
       `Successfully subscribed ${response.successCount} tokens to topic: ${topic}`,
     );
     return { success: true, count: response.successCount };
-  } catch (error: any) {
-    console.log("Error subscribing to topic:", error.message);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.log("Error subscribing to topic:", errorMessage);
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -72,9 +75,10 @@ const unsubscribeFromTopic = async (
       );
     }
     return { success: true, count: response.successCount };
-  } catch (error: any) {
-    console.log("Error unsubscribing from topic:", error.message);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.log("Error unsubscribing from topic:", errorMessage);
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -100,7 +104,7 @@ export const singleNotificationSend = async (notification_data: {
     sound_name,
   } = notification_data;
 
-  const messageBody: Record<string, any> = {
+  const messageBody: Record<string, unknown> = {
     title: noti_title,
     body: noti_msg,
     noti_for,
@@ -110,7 +114,7 @@ export const singleNotificationSend = async (notification_data: {
 
   if (details) messageBody.details = details;
 
-  const noti_payload: Record<string, any> = {
+  const noti_payload: Record<string, unknown> = {
     title: noti_title,
     body: noti_msg,
   };
@@ -136,8 +140,9 @@ export const singleNotificationSend = async (notification_data: {
         },
       },
     );
-  } catch (error: any) {
-    console.error("Error sending notification:", error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Error sending notification:", errorMessage);
     return null;
   }
 };
@@ -184,7 +189,7 @@ export const multiNotificationSend = async (notification_data: {
     };
   }
 
-  const messageBody: Record<string, any> = {
+  const messageBody: Record<string, unknown> = {
     title: noti_title,
     body: noti_msg,
     noti_for,
@@ -193,7 +198,7 @@ export const multiNotificationSend = async (notification_data: {
     sender_id: sender_id || "",
   };
 
-  const noti_payload: Record<string, any> = {
+  const noti_payload: Record<string, unknown> = {
     title: noti_title,
     body: noti_msg,
     image: noti_image,
@@ -236,8 +241,9 @@ export const multiNotificationSend = async (notification_data: {
     );
 
     console.log("Notification sent to topic:", topic);
-  } catch (error: any) {
-    console.error("Error sending notification to topic", error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Error sending notification to topic", errorMessage);
   }
 
   const unsubscribeResult = await unsubscribeFromTopic(device_token, topic);

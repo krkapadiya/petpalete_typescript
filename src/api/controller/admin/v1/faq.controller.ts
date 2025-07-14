@@ -193,8 +193,8 @@ export const activeDeactiveFaq = async (
       return;
     }
 
-    if (is_active == true || is_active == "true") {
-      if (find_faq.is_active == true) {
+    if (is_active === true || is_active === "true") {
+      if (find_faq.is_active === true) {
         await successRes(res, res.__("The FAQ is already activated."), []);
         return;
       } else {
@@ -218,8 +218,8 @@ export const activeDeactiveFaq = async (
       }
     }
 
-    if (is_active == false || is_active == "false") {
-      if (find_faq.is_active == false) {
+    if (is_active === false || is_active === "false") {
+      if (find_faq.is_active === false) {
         await successRes(res, res.__("The FAQ is already deactivated."), []);
         return;
       } else {

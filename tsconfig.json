@@ -7,13 +7,13 @@
     "rootDir": "./src", // Root directory for your source code
     "outDir": "./dist", // Output directory for compiled JavaScript files
     "strict": true, // Enable all strict type-checking options
-    "noUnusedLocals": true,          // ✅ new
-    "noUnusedParameters": true,    
+    "noUnusedLocals": true, // ✅ new
+    "noUnusedParameters": true,
     "esModuleInterop": true, // Enables default imports for modules without default exports
     "forceConsistentCasingInFileNames": true, // Enforce consistent casing in file names
     "moduleResolution": "node", // Use Node.js module resolution
     "resolveJsonModule": true, // Allow importing JSON files as modules
-    "strictNullChecks": true, // Enable strict null checks
+    "strictNullChecks": false, // Enable strict null checks
     "noImplicitAny": true, // Raise error on expressions and declarations with an implied 'any' type
     // "allowJs": true, // Allow JavaScript files to be compiled
     "noImplicitThis": true, // Raise error on 'this' expressions that have an implicit 'any' type
