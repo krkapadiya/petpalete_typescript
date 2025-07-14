@@ -7,6 +7,8 @@
     "rootDir": "./src", // Root directory for your source code
     "outDir": "./dist", // Output directory for compiled JavaScript files
     "strict": true, // Enable all strict type-checking options
+    "noUnusedLocals": true,          // ✅ new
+    "noUnusedParameters": true,    
     "esModuleInterop": true, // Enables default imports for modules without default exports
     "forceConsistentCasingInFileNames": true, // Enforce consistent casing in file names
     "moduleResolution": "node", // Use Node.js module resolution

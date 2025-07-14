@@ -9,6 +9,7 @@ import { service_likes } from "./../../../model/model.service_likes";
 import { communities } from "./../../../model/model.communities";
 import { user_reviews } from "./../../../model/model.user_reviews";
 import { payments } from "./../../../model/model.payments";
+import { notifications } from "../../../model/model.notifications";
 
 import {
   errorRes,
