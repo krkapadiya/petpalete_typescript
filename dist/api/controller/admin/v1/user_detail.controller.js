@@ -8,12 +8,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.allPayments = exports.paymentList = exports.userReviews = exports.userCommunities = exports.userServiceFavorites = exports.userServices = exports.userPetFavorites = exports.userPets = exports.blockUnblockUser = exports.userDetails = exports.allUserList = void 0;
-const i18n_1 = __importDefault(require("i18n"));
 const model_users_1 = require("./../../../model/model.users");
 const model_pets_1 = require("./../../../model/model.pets");
 const model_services_1 = require("./../../../model/model.services");
@@ -27,7 +23,7 @@ const user_function_1 = require("./../../../../util/user_function");
 const allUserList = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let { search = "", page = 1, limit = 10, ln } = req.body;
-        i18n_1.default.setLocale(req, ln);
+        i18n.setLocale(req, ln);
         const escapedSearch = search ? yield (0, user_function_1.escapeRegex)(search) : null;
         const users_data = yield model_users_1.users.aggregate([
             {
@@ -177,7 +173,7 @@ exports.allUserList = allUserList;
 const userDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let { user_id, ln } = req.body;
-        i18n_1.default.setLocale(req, ln);
+        i18n.setLocale(req, ln);
         const userObjectId = yield (0, user_function_1.objectId)(user_id);
         const [find_user_data] = yield model_users_1.users.aggregate([
             {
@@ -269,7 +265,7 @@ exports.userDetails = userDetails;
 const blockUnblockUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { block_user_id, is_block, ln } = req.body;
-        i18n_1.default.setLocale(req, ln);
+        i18n.setLocale(req, ln);
         let find_user = yield (0, user_function_1.findUser)(block_user_id);
         if (!find_user) {
             yield (0, response_functions_1.errorRes)(res, res.__("User not found."));
@@ -311,7 +307,7 @@ exports.blockUnblockUser = blockUnblockUser;
 const userPets = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { profile_user_id, page = 1, limit = 10, ln } = req.body;
-        i18n_1.default.setLocale(req, ln);
+        i18n.setLocale(req, ln);
         const profileObjectId = yield (0, user_function_1.objectId)(profile_user_id);
         const query = {
             is_deleted: false,
@@ -412,7 +408,7 @@ exports.userPets = userPets;
 const userPetFavorites = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { user_id, page = 1, limit = 10, ln } = req.body;
-        i18n_1.default.setLocale(req, ln);
+        i18n.setLocale(req, ln);
         const userObjectId = yield (0, user_function_1.objectId)(user_id);
         const total_pets = yield model_pet_likes_1.pet_likes.countDocuments({
             user_id: userObjectId,
@@ -535,7 +531,7 @@ exports.userPetFavorites = userPetFavorites;
 const userServices = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { profile_user_id, page = 1, limit = 10, ln } = req.body;
-        i18n_1.default.setLocale(req, ln);
+        i18n.setLocale(req, ln);
         const profileObjectId = yield (0, user_function_1.objectId)(profile_user_id);
         const query = {
             is_deleted: false,
@@ -632,7 +628,7 @@ exports.userServices = userServices;
 const userServiceFavorites = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { user_id, page = 1, limit = 10, ln } = req.body;
-        i18n_1.default.setLocale(req, ln);
+        i18n.setLocale(req, ln);
         const userObjectId = yield (0, user_function_1.objectId)(user_id);
         const total_services = yield model_service_likes_1.service_likes.countDocuments({
             user_id: userObjectId,
@@ -751,7 +747,7 @@ exports.userServiceFavorites = userServiceFavorites;
 const userCommunities = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { profile_user_id, page = 1, limit = 10, ln } = req.body;
-        i18n_1.default.setLocale(req, ln);
+        i18n.setLocale(req, ln);
         const profileObjectId = yield (0, user_function_1.objectId)(profile_user_id);
         const query = {
             is_deleted: false,
@@ -844,7 +840,7 @@ exports.userCommunities = userCommunities;
 const userReviews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { reviewed_user_id, page = 1, limit = 10, ln } = req.body;
-        i18n_1.default.setLocale(req, ln);
+        i18n.setLocale(req, ln);
         const reviewObjectId = yield (0, user_function_1.objectId)(reviewed_user_id);
         const result = yield model_user_reviews_1.user_reviews.aggregate([
             {
@@ -944,7 +940,7 @@ const paymentList = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     var _a;
     try {
         const { user_id, page = 1, limit = 10, ln } = req.body;
-        i18n_1.default.setLocale(req, ln);
+        i18n.setLocale(req, ln);
         const userObjectId = yield (0, user_function_1.objectId)(user_id);
         const totalAmount = yield model_payments_1.payments.aggregate([
             {
@@ -1050,7 +1046,7 @@ exports.paymentList = paymentList;
 const allPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { search = "", fromDate, toDate, page = 1, limit = 10, ln, } = req.body;
-        i18n_1.default.setLocale(req, ln);
+        i18n.setLocale(req, ln);
         let query = {};
         if (fromDate && toDate) {
             query.payment_date = {
