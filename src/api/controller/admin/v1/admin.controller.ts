@@ -300,7 +300,7 @@ export const adminVerifyOtp = async (
 
     if (find_admin.otp === otp) {
       const update_data = {
-        otp: null,
+        otp: null as null,
       };
 
       await email_verifications.updateOne(

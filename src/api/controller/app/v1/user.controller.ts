@@ -71,7 +71,7 @@ import {
 interface UserRequestBody {
   device_token: string;
   device_type: string;
-  location?: string;
+  location?: string | Record<string, unknown>;
   address: string;
   ln: string;
 }
@@ -98,7 +98,6 @@ export const guestSession = async (
     const { device_token, device_type, location, address, ln } =
       req.body as UserRequestBody;
     i18n.setLocale(req, ln);
-    console.log("req.body-------------", req.body);
 
     const find_guest_user = await findGuestUser(device_token);
 
@@ -112,21 +111,23 @@ export const guestSession = async (
       address,
     };
     if (location) {
-      const parsedLocation = JSON.parse(location);
-      const latitude = parseFloat(parsedLocation.latitude);
-      const longitude = parseFloat(parsedLocation.longitude);
+      let parsed: Record<string, unknown> | null = null;
 
-      if (!isNaN(latitude) && !isNaN(longitude)) {
-        insert_data.location = {
-          type: "Point",
-          coordinates: [longitude, latitude],
-        };
+      if (typeof location === "string") {
+        try {
+          parsed = JSON.parse(location);
+        } catch (err) {
+          console.log("Error : ", err as Error);
+          console.warn("guestSession: invalid JSON in `location`:", location);
+        }
       } else {
-        console.warn("Invalid location data:", parsedLocation);
+        parsed = location;
+      }
+
+      if (parsed) {
+        insert_data.location = parsed;
       }
     }
-    console.log("insert_data-------------", insert_data);
-
     await guests.create(insert_data);
 
     await successRes(res, res.__("Guest added successfully."), {});
@@ -896,7 +897,7 @@ const toMediaFile = (file: UploadedFile): MediaFile => ({
   originalFilename: file.name,
   mimetype: file.mimetype,
   data: file.data,
-  path: file.tempFilePath ?? "",
+  path: "",
 });
 
 export const uploadMedia = async (
@@ -914,6 +915,12 @@ export const uploadMedia = async (
     i18n.setLocale(req, ln ?? "en");
     const folder_name = "user_media";
     const content_type = album.mimetype;
+
+    console.log("Media file info:", {
+      name: album.name,
+      mimetype: album.mimetype,
+      dataLength: album.data?.length,
+    });
 
     const res_upload_file = await uploadMediaIntoS3Bucket(
       toMediaFile(album), // satisfies MediaFile

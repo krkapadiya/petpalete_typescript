@@ -112,5 +112,13 @@
 	"Your password has been successfully reset.": "Your password has been successfully reset.",
 	"Data has been successfully loaded.": "Data has been successfully loaded.",
 	"The FAQ has been successfully activated.": "The FAQ has been successfully activated.",
-	"User has been successfully blocked.": "User has been successfully blocked."
+	"User has been successfully blocked.": "User has been successfully blocked.",
+	"This email address is already registered. Please use a different email or log in to your existing account.": "This email address is already registered. Please use a different email or log in to your existing account.",
+	"No account found associated with this email address.": "No account found associated with this email address.",
+	"No account associated with this email address was found.": "No account associated with this email address was found.",
+	"No account found with the provided email address.": "No account found with the provided email address.",
+	"The content already exists.": "The content already exists.",
+	"The FAQ already exists.": "The FAQ already exists.",
+	"Please enter valid Code.": "Please enter valid Code.",
+	"User media upload failed.": "User media upload failed."
 }

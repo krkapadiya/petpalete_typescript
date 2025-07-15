@@ -42,7 +42,6 @@ const guestSession = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const { device_token, device_type, location, address, ln } = req.body;
         i18n_1.default.setLocale(req, ln);
-        console.log("req.body-------------", req.body);
         const find_guest_user = yield (0, user_function_1.findGuestUser)(device_token);
         if (find_guest_user) {
             yield model_guests_1.guests.deleteMany({ device_token });
@@ -53,20 +52,23 @@ const guestSession = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             address,
         };
         if (location) {
-            const parsedLocation = JSON.parse(location);
-            const latitude = parseFloat(parsedLocation.latitude);
-            const longitude = parseFloat(parsedLocation.longitude);
-            if (!isNaN(latitude) && !isNaN(longitude)) {
-                insert_data.location = {
-                    type: "Point",
-                    coordinates: [longitude, latitude],
-                };
+            let parsed = null;
+            if (typeof location === "string") {
+                try {
+                    parsed = JSON.parse(location);
+                }
+                catch (err) {
+                    console.log("Error : ", err);
+                    console.warn("guestSession: invalid JSON in `location`:", location);
+                }
             }
             else {
-                console.warn("Invalid location data:", parsedLocation);
+                parsed = location;
+            }
+            if (parsed) {
+                insert_data.location = parsed;
             }
         }
-        console.log("insert_data-------------", insert_data);
         yield model_guests_1.guests.create(insert_data);
         yield (0, response_functions_1.successRes)(res, res.__("Guest added successfully."), {});
     }
@@ -591,16 +593,14 @@ function isAlbumFiles(f) {
         "album" in f &&
         f.album !== null);
 }
-const toMediaFile = (file) => {
-    var _a;
-    return ({
-        originalFilename: file.name,
-        mimetype: file.mimetype,
-        data: file.data,
-        path: (_a = file.tempFilePath) !== null && _a !== void 0 ? _a : "",
-    });
-};
+const toMediaFile = (file) => ({
+    originalFilename: file.name,
+    mimetype: file.mimetype,
+    data: file.data,
+    path: "",
+});
 const uploadMedia = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         if (!isAlbumFiles(req.files)) {
             return (0, response_functions_1.errorRes)(res, "Album file is required.");
@@ -611,6 +611,11 @@ const uploadMedia = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         i18n_1.default.setLocale(req, ln !== null && ln !== void 0 ? ln : "en");
         const folder_name = "user_media";
         const content_type = album.mimetype;
+        console.log("Media file info:", {
+            name: album.name,
+            mimetype: album.mimetype,
+            dataLength: (_a = album.data) === null || _a === void 0 ? void 0 : _a.length,
+        });
         const res_upload_file = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(toMediaFile(album), // satisfies MediaFile
         folder_name, content_type);
         if (!res_upload_file.status) {

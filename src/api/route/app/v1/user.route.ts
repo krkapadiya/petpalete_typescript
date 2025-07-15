@@ -2,7 +2,7 @@ import express, { Request } from "express";
 const app_router = express.Router();
 import {
   AuthRequest,
-  CustomRequest,
+  // CustomRequest,
 } from "./../../../controller/app/v1/user.controller";
 import multipart from "connect-multiparty";
 const multipartMiddleware = multipart();
@@ -23,7 +23,7 @@ import {
   resetPassword,
   logout,
   deleteAccount,
-  uploadMedia,
+  // uploadMedia,
   removeMedia,
   deleteAllNotifications,
   notificationsList,
@@ -57,7 +57,7 @@ import {
   resetPasswordDto,
   logoutDto,
   deleteAccountDto,
-  uploadMediaDto,
+  // uploadMediaDto,
   removeMediaDto,
   notificationsListDto,
   changeFullNameDto,
@@ -149,15 +149,15 @@ app_router.post(
   deleteAccount,
 );
 
-app_router.post(
-  "/upload_media",
-  userAuth,
-  multipartMiddleware,
-  validateRequest(uploadMediaDto),
-  (req, res, next) => {
-    uploadMedia(req as CustomRequest, res).catch(next);
-  },
-);
+// app_router.post(
+//   "/upload_media",
+//   userAuth,
+//   multipartMiddleware,
+//   validateRequest(uploadMediaDto),
+//   (req, res, next) => {
+//     uploadMedia(req as CustomRequest, res).catch(next);
+//   },
+// );
 
 app_router.post(
   "/remove_media",
