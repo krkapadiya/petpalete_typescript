@@ -1,20 +1,19 @@
 import jwt from "jsonwebtoken";
-import { Document } from "mongoose";
+import { Types } from "mongoose";
 
-interface CustomerDocument extends Document {
-  _id: string;
-}
+import { IUser } from "../api/model/model.users";
 
-export const userToken = async (findCustomer: CustomerDocument) => {
+export const userToken = async (
+  findCustomer: IUser | { _id: Types.ObjectId },
+): Promise<string> => {
   if (!findCustomer || !findCustomer._id) {
     throw new Error("Invalid customer document");
   }
 
-  const token = jwt.sign(
-    { id: findCustomer._id },
-    process.env.TOKEN_KEY as string,
-    { expiresIn: "24h" },
-  );
+  const id = findCustomer._id.toString();
+  const token = jwt.sign({ id }, process.env.TOKEN_KEY as string, {
+    expiresIn: "24h",
+  });
 
   return token;
 };

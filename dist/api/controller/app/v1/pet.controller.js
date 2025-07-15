@@ -380,7 +380,12 @@ const uploadPetMedia = (req, res) => __awaiter(void 0, void 0, void 0, function*
             // Skip if the arrays are mismatched
             if (!mediaFile)
                 continue;
-            const uploadRes = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(mediaFile, mediaFolder, mediaFile.type);
+            const uploadRes = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)({
+                originalFilename: mediaFile.name,
+                mimetype: mediaFile.type,
+                data: mediaFile.data,
+                path: mediaFile.path,
+            }, mediaFolder, mediaFile.type);
             if (!uploadRes.status) {
                 yield (0, response_functions_1.errorRes)(res, res.__("Media upload failed for one of the files."));
                 return;

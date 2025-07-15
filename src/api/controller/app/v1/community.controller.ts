@@ -6,8 +6,8 @@ import { guests } from "../../../model/model.guests";
 import { notifications } from "../../../model/model.notifications";
 import { communities_albums } from "../../../model/model.communities_albums";
 import { ICommunityAlbum } from "../../../model/model.communities_albums";
-
-// type UserWithId = { _id: string | ObjectId };
+import { MediaFile } from "../../../../util/bucket_manager";
+import fs from "fs";
 
 import {
   errorRes,
@@ -45,13 +45,8 @@ interface CommunityInsertData {
   title: string;
   address: string;
   description: string;
-  location?: unknown; // You can replace `any` with aproper GeoJSON Point type if available
+  location?: unknown;
 }
-
-// interface CommunityDoc {
-//   _id: string; // or ObjectId if you're using Mongoose's ObjectId
-//   [key: string]: unknown;
-// }
 
 export const addCommunity = async (
   req: IUserRequest,
@@ -407,16 +402,11 @@ export const uploadCommunityMedia = async (
       await errorRes(res, res.__("No files were uploaded."));
       return;
     }
-
-    interface MediaFile {
-      originalFilename: string;
-      path: string;
-      mimetype?: string;
-    }
-
     const convertToMediaFile = (file: Express.Multer.File): MediaFile => ({
       originalFilename: file.originalname,
       path: file.path,
+      mimetype: file.mimetype,
+      data: fs.readFileSync(file.path),
     });
 
     let album =
@@ -452,9 +442,17 @@ export const uploadCommunityMedia = async (
       const album_type_i = albumType[i];
       const media = thumbnail[0];
       const content_type = media.mimetype || "image/jpeg";
+      const fileData = fs.readFileSync(media.path);
+
+      const mediaFile = {
+        originalFilename: media.originalFilename,
+        path: media.path,
+        mimetype: media.mimetype,
+        data: fileData,
+      };
 
       const res_upload_file = await uploadMediaIntoS3Bucket(
-        media,
+        mediaFile,
         folder_name,
         content_type,
       );

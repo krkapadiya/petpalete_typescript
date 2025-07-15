@@ -1,6 +1,5 @@
 import i18n from "i18n";
 import { Request, Response } from "express";
-
 import { pets } from "../../../model/model.pets";
 import { pet_albums } from "../../../model/model.pet_albums";
 import { users } from "../../../model/model.users";
@@ -8,6 +7,9 @@ import { payments } from "../../../model/model.payments";
 import { guests } from "../../../model/model.guests";
 import { notifications } from "../../../model/model.notifications";
 import { pet_likes } from "../../../model/model.pet_likes";
+import { MediaFile } from "./../../../../util/bucket_manager";
+import { Buffer } from "buffer";
+
 import {
   errorRes,
   successRes,
@@ -565,6 +567,11 @@ interface S3File {
   path: string;
   type: string;
   key: string;
+  mimetype: string;
+  name: string;
+  headers: Record<string, string>;
+  data: Buffer;
+  [key: string]: unknown;
 }
 
 export const uploadPetMedia = async (
@@ -612,7 +619,12 @@ export const uploadPetMedia = async (
       if (!mediaFile) continue;
 
       const uploadRes = await uploadMediaIntoS3Bucket(
-        mediaFile,
+        {
+          originalFilename: mediaFile.name,
+          mimetype: mediaFile.type,
+          data: mediaFile.data,
+          path: mediaFile.path,
+        } as MediaFile,
         mediaFolder,
         mediaFile.type,
       );

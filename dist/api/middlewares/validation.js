@@ -11,41 +11,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateRequest = void 0;
 const remove_file_1 = require("./../../util/remove_file");
-const response_functions_1 = require("../../util/response_functions");
+const response_functions_1 = require("./../../util/response_functions");
 const validateRequest = (schema) => {
     return (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const option = {
                 abortEarly: false,
                 errors: {
-                    wrap: {
-                        label: "",
-                    },
+                    wrap: { label: "" },
                 },
             };
             const { error } = yield schema.validate(req.body, option);
-            if (error) {
+            if (error)
                 throw error;
-            }
             next();
         }
         catch (error) {
             const { body, files } = req;
             if (Array.isArray(files)) {
-                for (const file of files) {
+                files.forEach((file) => {
                     const fieldValue = body[file.fieldname];
-                    if (file.fieldname && fieldValue && typeof fieldValue === "string") {
-                        (0, remove_file_1.removeFile)(fieldValue);
-                    }
-                }
-            }
-            else if (files && typeof files === "object") {
-                for (const field in files) {
-                    const fieldValue = body[field];
                     if (fieldValue && typeof fieldValue === "string") {
                         (0, remove_file_1.removeFile)(fieldValue);
                     }
-                }
+                });
             }
             const errorMsg = error instanceof Error ? error.message : "Validation failed";
             yield (0, response_functions_1.errorRes)(res, errorMsg);

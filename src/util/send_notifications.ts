@@ -156,7 +156,7 @@ export const multiNotificationSend = async (notification_data: {
   noti_image?: string;
   chat_room_id?: string;
   sender_id?: string;
-  sound_name: string;
+  sound_name?: string;
 }) => {
   const accessToken = await getAccessToken();
   const {

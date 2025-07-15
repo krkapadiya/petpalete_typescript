@@ -6,9 +6,11 @@ import {
   DeleteObjectCommand,
 } from "../config/bucket_config";
 
-interface MediaFile {
+export interface MediaFile {
   originalFilename: string;
   path: string;
+  mimetype: string;
+  data: Buffer;
 }
 
 interface UploadResult {

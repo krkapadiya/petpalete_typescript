@@ -44,7 +44,6 @@ const addService = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const newService = yield model_services_1.services.create(insert_data);
         if (newService) {
             const userObjectId = yield (0, user_function_1.objectId)(user_id);
-            let notiData = {};
             const location_parse = JSON.parse(location);
             const find_nearby_users = yield model_users_1.users.find({
                 _id: { $ne: user_id },
@@ -79,18 +78,10 @@ const addService = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             });
             const nearUserIds = find_nearby_users.map((user) => user._id);
             const nearUserDeviceTokens = find_nearby_guest_users.map((user) => user.device_token);
-            const deviceTokenData = yield (0, user_function_1.findMultipleUserDeviceToken)(nearUserIds);
+            const deviceTokenData = yield (0, user_function_1.findMultipleUserDeviceToken)(nearUserIds.map(String));
             const noti_msg = `A new ${newService.service_name} is now available in your area!`;
             const noti_title = "New Service Nearby";
             const noti_for = "new_service";
-            notiData = {
-                noti_msg,
-                noti_title,
-                noti_for,
-                device_token: deviceTokenData,
-                service_id: newService._id,
-                id: newService._id,
-            };
             yield model_notifications_1.notifications.create({
                 sender_id: userObjectId,
                 receiver_ids: nearUserIds,
@@ -100,8 +91,15 @@ const addService = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 service_id: newService._id,
             });
             if (Array.isArray(deviceTokenData) && deviceTokenData.length > 0) {
-                (0, send_notifications_1.multiNotificationSend)(notiData);
-                (0, user_function_1.incMultipleUserNotificationBadge)(nearUserIds);
+                const notificationData = {
+                    device_token: deviceTokenData,
+                    noti_title,
+                    noti_msg,
+                    noti_for,
+                    id: newService._id.toString(),
+                };
+                (0, send_notifications_1.multiNotificationSend)(notificationData);
+                (0, user_function_1.incMultipleUserNotificationBadge)(nearUserIds.map(String));
             }
             const notiDataGuest = {
                 noti_msg,
@@ -117,13 +115,11 @@ const addService = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 (0, send_notifications_1.multiNotificationSend)(notiDataGuest);
             }
         }
-        yield (0, response_functions_1.successRes)(res, res.__("The service has been successfully added."), newService);
-        return;
+        return (0, response_functions_1.successRes)(res, res.__("The service has been successfully added."), newService);
     }
     catch (error) {
-        console.log("Error:", error);
-        yield (0, response_functions_1.errorRes)(res, res.__("Internal server error"));
-        return;
+        console.error("Error:", error);
+        return (0, response_functions_1.errorRes)(res, res.__("Internal server error"));
     }
 });
 exports.addService = addService;
@@ -316,7 +312,12 @@ const uploadServiceMedia = (req, res) => __awaiter(void 0, void 0, void 0, funct
             const mediaFile = albumFiles[i];
             if (!mediaFile)
                 continue;
-            const uploadRes = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(mediaFile, mediaFolder, mediaFile.type);
+            const uploadRes = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)({
+                originalFilename: mediaFile.name,
+                mimetype: mediaFile.type,
+                data: mediaFile.data,
+                path: mediaFile.path,
+            }, mediaFolder, mediaFile.type);
             if (!uploadRes.status) {
                 yield (0, response_functions_1.errorRes)(res, res.__("Media upload failed for one of the files."));
                 return;
@@ -337,7 +338,12 @@ const uploadServiceMedia = (req, res) => __awaiter(void 0, void 0, void 0, funct
             if (currentType === "video") {
                 let thumbPath = null;
                 if (thumbnailFiles[i]) {
-                    const thumbRes = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(thumbnailFiles[i], thumbFolder, thumbnailFiles[i].type);
+                    const thumbRes = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)({
+                        originalFilename: thumbnailFiles[i].name,
+                        mimetype: thumbnailFiles[i].type,
+                        data: thumbnailFiles[i].data,
+                        path: thumbnailFiles[i].path,
+                    }, thumbFolder, thumbnailFiles[i].type);
                     if (!thumbRes.status) {
                         yield (0, response_functions_1.errorRes)(res, res.__("Thumbnail upload failed."));
                         return;

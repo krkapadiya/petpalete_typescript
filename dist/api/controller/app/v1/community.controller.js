@@ -19,15 +19,11 @@ const model_users_1 = require("../../../model/model.users");
 const model_guests_1 = require("../../../model/model.guests");
 const model_notifications_1 = require("../../../model/model.notifications");
 const model_communities_albums_1 = require("../../../model/model.communities_albums");
-// type UserWithId = { _id: string | ObjectId };
+const fs_1 = __importDefault(require("fs"));
 const response_functions_1 = require("../../../../util/response_functions");
 const user_function_1 = require("../../../../util/user_function");
 const send_notifications_1 = require("../../../../util/send_notifications");
 const bucket_manager_1 = require("../../../../util/bucket_manager");
-// interface CommunityDoc {
-//   _id: string; // or ObjectId if you're using Mongoose's ObjectId
-//   [key: string]: unknown;
-// }
 const addCommunity = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user_id = req.user._id;
@@ -268,6 +264,8 @@ const uploadCommunityMedia = (req, res) => __awaiter(void 0, void 0, void 0, fun
         const convertToMediaFile = (file) => ({
             originalFilename: file.originalname,
             path: file.path,
+            mimetype: file.mimetype,
+            data: fs_1.default.readFileSync(file.path),
         });
         let album = ((_a = req.files["album"]) === null || _a === void 0 ? void 0 : _a.map(convertToMediaFile)) || [];
         let thumbnail = ((_b = req.files["thumbnail"]) === null || _b === void 0 ? void 0 : _b.map(convertToMediaFile)) || [];
@@ -290,7 +288,14 @@ const uploadCommunityMedia = (req, res) => __awaiter(void 0, void 0, void 0, fun
             const album_type_i = albumType[i];
             const media = thumbnail[0];
             const content_type = media.mimetype || "image/jpeg";
-            const res_upload_file = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(media, folder_name, content_type);
+            const fileData = fs_1.default.readFileSync(media.path);
+            const mediaFile = {
+                originalFilename: media.originalFilename,
+                path: media.path,
+                mimetype: media.mimetype,
+                data: fileData,
+            };
+            const res_upload_file = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(mediaFile, folder_name, content_type);
             if (res_upload_file.status) {
                 const user_image_path = `${folder_name}/` + res_upload_file.file_name;
                 if (album_type_i === "image") {

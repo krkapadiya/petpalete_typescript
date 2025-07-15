@@ -18,7 +18,10 @@ const userToken = (findCustomer) => __awaiter(void 0, void 0, void 0, function* 
     if (!findCustomer || !findCustomer._id) {
         throw new Error("Invalid customer document");
     }
-    const token = jsonwebtoken_1.default.sign({ id: findCustomer._id }, process.env.TOKEN_KEY, { expiresIn: "24h" });
+    const id = findCustomer._id.toString();
+    const token = jsonwebtoken_1.default.sign({ id }, process.env.TOKEN_KEY, {
+        expiresIn: "24h",
+    });
     return token;
 });
 exports.userToken = userToken;

@@ -276,7 +276,7 @@ export const findCommunityAlbums = async (
 export const findCommunityAlbumById = async (
   album_id: string,
   user_id: string,
-): Promise<any | null> => {
+): Promise<unknown | null> => {
   try {
     const album_data_by_id = await communities_albums.findOne({
       _id: album_id,

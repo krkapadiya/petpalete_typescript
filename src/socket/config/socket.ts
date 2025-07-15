@@ -1,36 +1,26 @@
-// import { Server, Socket } from "socket.io";
-// import { Server as HttpServer } from "http";
+import { Server as HTTPServer } from "http";
+import { Server as HTTPSServer } from "https";
+import { Server as SocketIOServer, Namespace } from "socket.io";
 
-// export interface SocketUser {
-//   _id: string;
-//   [key: string]: unknown;
-// }
+type ServerType = HTTPServer | HTTPSServer;
 
-// export interface SocketWithUser extends Socket {
-//   user: SocketUser;
-// }
+let ioInstance: SocketIOServer | null = null;
 
-// export interface ServerWithUser extends Server {
-//   to(room: string): ServerWithUser;
-//   emit(event: string, data: unknown): ServerWithUser;
-// }
+export const init = (server: ServerType): SocketIOServer => {
+  ioInstance = new SocketIOServer(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"],
+    },
+  });
+  return ioInstance;
+};
 
-// let ioInstance: Server | null = null;
+export const getIO = (): SocketIOServer => {
+  if (!ioInstance) {
+    throw new Error("Socket.IO instance has not been initialised!");
+  }
+  return ioInstance;
+};
 
-// export default {
-//   init: (server: HttpServer) => {
-//     ioInstance = new Server(server, {
-//       cors: {
-//         origin: "*",
-//         methods: ["GET", "POST"],
-//       },
-//     });
-//     return ioInstance;
-//   },
-//   getIO: () => {
-//     if (!ioInstance) {
-//       throw new Error("Socket.io not initialized!");
-//     }
-//     return ioInstance;
-//   },
-// };
+export type SocketIONamespace = Namespace;

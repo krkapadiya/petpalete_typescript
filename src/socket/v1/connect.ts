@@ -2,6 +2,7 @@ import { users } from "./../../api/model/model.users";
 import { user_sessions } from "./../../api/model/model.user_sessions";
 import { chat_rooms } from "./../../api/model/model.chat_rooms";
 import mongoose from "mongoose";
+import { Server } from "socket.io";
 
 import i18n from "i18n";
 
@@ -83,7 +84,7 @@ export const setSocketId = async (data: SetSocketIdData) => {
 
 export const disconnectSocket = async (
   data: DisconnectSocketData,
-  v1version: string,
+  v1version: Server,
 ) => {
   try {
     const { socket_id, ln = "en" } = data;

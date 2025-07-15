@@ -9,6 +9,7 @@ import { service_albums } from "./../../../model/model.service_albums";
 import { service_likes } from "./../../../model/model.service_likes";
 import { IUser } from "./../../../model/model.users";
 import { Types } from "mongoose";
+import { MediaFile } from "./../../../../util/bucket_manager";
 
 interface NotificationData {
   device_token: string[];
@@ -56,7 +57,7 @@ import {
 export const addService = async (
   req: Request,
   res: Response,
-): Promise<void> => {
+): Promise<Response> => {
   try {
     const user_id = req.user._id;
 
@@ -84,7 +85,6 @@ export const addService = async (
     if (newService) {
       const userObjectId = await objectId(user_id);
 
-      let notiData = {};
       const location_parse = JSON.parse(location);
       const find_nearby_users = await users.find({
         _id: { $ne: user_id },
@@ -125,21 +125,12 @@ export const addService = async (
       );
 
       const deviceTokenData = await findMultipleUserDeviceToken(
-        nearUserIds as string[],
+        nearUserIds.map(String),
       );
 
       const noti_msg = `A new ${newService.service_name} is now available in your area!`;
       const noti_title = "New Service Nearby";
       const noti_for = "new_service";
-
-      notiData = {
-        noti_msg,
-        noti_title,
-        noti_for,
-        device_token: deviceTokenData,
-        service_id: newService._id,
-        id: newService._id,
-      };
 
       await notifications.create({
         sender_id: userObjectId,
@@ -151,8 +142,15 @@ export const addService = async (
       });
 
       if (Array.isArray(deviceTokenData) && deviceTokenData.length > 0) {
-        multiNotificationSend(notiData as NotificationData);
-        incMultipleUserNotificationBadge(nearUserIds as string[]);
+        const notificationData = {
+          device_token: deviceTokenData,
+          noti_title,
+          noti_msg,
+          noti_for,
+          id: newService._id.toString(),
+        };
+        multiNotificationSend(notificationData);
+        incMultipleUserNotificationBadge(nearUserIds.map(String));
       }
 
       const notiDataGuest = {
@@ -173,16 +171,14 @@ export const addService = async (
       }
     }
 
-    await successRes(
+    return successRes(
       res,
       res.__("The service has been successfully added."),
       newService,
     );
-    return;
   } catch (error) {
-    console.log("Error:", error);
-    await errorRes(res, res.__("Internal server error"));
-    return;
+    console.error("Error:", error);
+    return errorRes(res, res.__("Internal server error"));
   }
 };
 
@@ -484,7 +480,12 @@ export const uploadServiceMedia = async (
       if (!mediaFile) continue;
 
       const uploadRes = await uploadMediaIntoS3Bucket(
-        mediaFile,
+        {
+          originalFilename: mediaFile.name,
+          mimetype: mediaFile.type,
+          data: mediaFile.data,
+          path: mediaFile.path,
+        } as MediaFile,
         mediaFolder,
         mediaFile.type,
       );
@@ -518,7 +519,12 @@ export const uploadServiceMedia = async (
 
         if (thumbnailFiles[i]) {
           const thumbRes = await uploadMediaIntoS3Bucket(
-            thumbnailFiles[i],
+            {
+              originalFilename: thumbnailFiles[i].name,
+              mimetype: thumbnailFiles[i].type,
+              data: thumbnailFiles[i].data,
+              path: thumbnailFiles[i].path,
+            } as MediaFile,
             thumbFolder,
             thumbnailFiles[i].type,
           );
