@@ -7,7 +7,6 @@ import { notifications } from "../../../model/model.notifications";
 import { communities_albums } from "../../../model/model.communities_albums";
 import { ICommunityAlbum } from "../../../model/model.communities_albums";
 import { MediaFile } from "../../../../util/bucket_manager";
-import fs from "fs";
 
 import {
   errorRes,
@@ -387,68 +386,51 @@ export const deleteCommunity = async (
 };
 
 export const uploadCommunityMedia = async (
-  req: IUserRequest,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  req: Request & { user: { _id: string }; files?: any },
   res: Response,
 ): Promise<void> => {
   try {
     const user_id = req.user._id;
-    const { community_id, album_type, ln } = req.body;
+    const { community_id, album_type, ln } = req.body as {
+      community_id: string;
+      album_type?: string;
+      ln: string;
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let { album, thumbnail }: { album: any; thumbnail?: any } = req.files ?? {};
+
     i18n.setLocale(req, ln);
+
+    if (album && !Array.isArray(album)) album = [album];
+    if (thumbnail && !Array.isArray(thumbnail)) thumbnail = [thumbnail];
+
+    if (!album || !Array.isArray(album)) {
+      errorRes(res, res.__("No media files provided."));
+      return;
+    }
+
+    const albumType: string[] = album_type ? JSON.parse(album_type) : [];
+    const uploadedFiles: unknown[] = [];
 
     const folder_name = "community_media";
     const folder_name_thumbnail = "video_thumbnail";
 
-    if (!req.files || typeof req.files !== "object") {
-      await errorRes(res, res.__("No files were uploaded."));
-      return;
-    }
-    const convertToMediaFile = (file: Express.Multer.File): MediaFile => ({
-      originalFilename: file.originalname,
-      path: file.path,
-      mimetype: file.mimetype,
-      data: fs.readFileSync(file.path),
-    });
-
-    let album =
-      (req.files as { [key: string]: Express.Multer.File[] })["album"]?.map(
-        convertToMediaFile,
-      ) || [];
-    let thumbnail =
-      (req.files as { [key: string]: Express.Multer.File[] })["thumbnail"]?.map(
-        convertToMediaFile,
-      ) || [];
-
-    if (!album) {
-      await errorRes(res, res.__("Album file is missing."));
-      return;
-    }
-
-    if (!Array.isArray(album)) {
-      album = [album];
-    }
-
-    if (thumbnail && !Array.isArray(thumbnail)) {
-      thumbnail = [thumbnail];
-    }
-
-    let albumType: string[] = [];
-    if (album_type) {
-      albumType = JSON.parse(album_type);
-    }
-
-    const uploadedFiles = [];
-
     for (let i = 0; i < albumType.length; i++) {
       const album_type_i = albumType[i];
-      const media = thumbnail[0];
-      const content_type = media.mimetype || "image/jpeg";
-      const fileData = fs.readFileSync(media.path);
+      const media = album[i];
+      if (!media) {
+        errorRes(res, res.__("Media upload failed for one of the files."));
+        return;
+      }
 
-      const mediaFile = {
+      const content_type = media.type;
+      const mediaFile: MediaFile = {
         originalFilename: media.originalFilename,
         path: media.path,
-        mimetype: media.mimetype,
-        data: fileData,
+        mimetype: media.type,
+        data: Buffer.alloc(0),
       };
 
       const res_upload_file = await uploadMediaIntoS3Bucket(
@@ -457,85 +439,82 @@ export const uploadCommunityMedia = async (
         content_type,
       );
 
-      if (res_upload_file.status) {
+      if (!res_upload_file.status) {
+        errorRes(res, res.__("Media upload failed for one of the files."));
+        return;
+      }
+
+      if (album_type_i === "image") {
         const user_image_path = `${folder_name}/` + res_upload_file.file_name;
 
-        if (album_type_i === "image") {
-          interface CommunityAlbumData {
-            user_id: string;
-            community_id: string;
-            album_type: string;
-            album_thumbnail?: string;
-            album_path: string;
-          }
+        const add_albums = await communities_albums.create({
+          user_id,
+          community_id,
+          album_type: album_type_i,
+          album_thumbnail: null,
+          album_path: user_image_path,
+        });
 
-          const fileData: CommunityAlbumData = {
-            user_id,
-            community_id,
-            album_type: album_type_i,
-            album_thumbnail: null,
-            album_path: user_image_path,
+        add_albums.album_path = process.env.BUCKET_URL + add_albums.album_path;
+
+        uploadedFiles.push(add_albums);
+        continue;
+      }
+
+      if (album_type_i === "video") {
+        const file_name = res_upload_file.file_name!;
+        const user_image_path = `${folder_name}/${file_name}`;
+        let thumbnail_image_path: string | null = null;
+
+        if (thumbnail && thumbnail[i]) {
+          const thumbSrc = thumbnail[i];
+          const thumbMedia: MediaFile = {
+            originalFilename: thumbSrc.originalFilename,
+            path: thumbSrc.path,
+            mimetype: thumbSrc.type,
+            data: Buffer.alloc(0),
           };
 
-          const add_albums = await communities_albums.create(fileData);
+          const res_upload_thumb = await uploadMediaIntoS3Bucket(
+            thumbMedia,
+            folder_name_thumbnail,
+            thumbSrc.type,
+          );
 
-          add_albums.album_path =
-            process.env.BUCKET_URL + add_albums.album_path;
-          uploadedFiles.push(add_albums);
-        }
-
-        if (album_type_i === "video") {
-          let thumbnail_image_path: string | null = null;
-
-          if (thumbnail && thumbnail[i]) {
-            const res_upload_thumb = await uploadMediaIntoS3Bucket(
-              thumbnail[i],
-              folder_name_thumbnail,
-              "image/jpeg",
-            );
-
-            if (res_upload_thumb.status) {
-              thumbnail_image_path = `${folder_name_thumbnail}/${res_upload_thumb.file_name}`;
-            }
+          if (!res_upload_thumb.status) {
+            errorRes(res, res.__("Media upload failed for one of the files."));
+            return;
           }
 
-          const fileData = {
-            user_id,
-            community_id,
-            album_type: album_type_i,
-            album_thumbnail: thumbnail_image_path,
-            album_path: user_image_path,
-          };
-
-          const add_albums = await communities_albums.create(fileData);
-
-          add_albums.album_path =
-            process.env.BUCKET_URL + add_albums.album_path;
-          add_albums.album_thumbnail = thumbnail_image_path
-            ? process.env.BUCKET_URL + thumbnail_image_path
-            : undefined;
-
-          uploadedFiles.push(add_albums);
+          thumbnail_image_path = `${folder_name_thumbnail}/${res_upload_thumb.file_name}`;
         }
-      } else {
-        await errorRes(
-          res,
-          res.__("Media upload failed for one of the files."),
-        );
-        return;
+
+        const add_albums = await communities_albums.create({
+          user_id,
+          community_id,
+          album_type: album_type_i,
+          album_thumbnail: thumbnail_image_path,
+          album_path: user_image_path,
+        });
+
+        add_albums.album_path = process.env.BUCKET_URL + add_albums.album_path;
+        if (thumbnail_image_path) {
+          add_albums.album_thumbnail =
+            process.env.BUCKET_URL + add_albums.album_thumbnail;
+        }
+
+        uploadedFiles.push(add_albums);
       }
     }
 
-    await successRes(
+    successRes(
       res,
       res.__("Community media uploaded successfully."),
       uploadedFiles,
     );
-    return;
   } catch (error) {
-    console.log("Error : ", error);
-    await errorRes(res, res.__("Internal server error"));
-    return;
+    console.error("Error :", error);
+    errorRes(res, res.__("Internal server error"));
   }
 };
 

@@ -297,11 +297,17 @@ export const adminVerifyOtp = async (
       );
       return;
     }
-
-    if (find_admin.otp === otp) {
+    if (String(find_admin.otp) === String(otp)) {
       const update_data = {
         otp: null as null,
       };
+
+      console.log("otp--------", otp, typeof otp);
+      console.log(
+        "find_admin.otp--------",
+        find_admin.otp,
+        typeof find_admin.otp,
+      );
 
       await email_verifications.updateOne(
         {

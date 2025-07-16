@@ -36,7 +36,6 @@ const configureApp = (server) => {
         return req.hostname;
     });
     server.use((0, morgan_1.default)(":method :host :url :status :res[content-length] - :response-time ms"));
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     server.use(function (req, res, next) {
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");

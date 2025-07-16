@@ -426,140 +426,140 @@ export const likeDislikeServices = async (
   }
 };
 
-interface S3File {
-  originalFilename: string;
-  path: string;
-  type: string;
-  size: number;
-  name: string;
-  mimetype: string;
-  headers: Record<string, string>;
-  [key: string]: unknown;
-}
-
-interface FilesObject {
-  album?: S3File | S3File[];
-  thumbnail?: S3File | S3File[];
-}
-
 export const uploadServiceMedia = async (
-  req: Request,
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  req: Request & { user: { _id: string }; files?: any },
   res: Response,
 ): Promise<void> => {
   try {
-    const user_id = req.user._id as Types.ObjectId;
+    const user_id = req.user._id;
+    const { service_id, album_type, ln } = req.body as {
+      service_id: string;
+      album_type?: string;
+      ln: string;
+    };
 
-    const { service_id, album_type, ln = "en" } = req.body;
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    let { album, thumbnail }: { album: any; thumbnail?: any } = req.files ?? {};
+
     i18n.setLocale(req, ln);
 
-    const files = (req.files as unknown as FilesObject) ?? {};
+    /* ---------- normalise to arrays ---------- */
+    if (album && !Array.isArray(album)) album = [album];
+    if (thumbnail && !Array.isArray(thumbnail)) thumbnail = [thumbnail];
 
-    const albumFiles: S3File[] = files.album
-      ? Array.isArray(files.album)
-        ? files.album
-        : [files.album]
-      : [];
+    if (!album || !Array.isArray(album)) {
+      errorRes(res, res.__("No media files provided."));
+      return;
+    }
 
-    const thumbnailFiles: S3File[] = files.thumbnail
-      ? Array.isArray(files.thumbnail)
-        ? files.thumbnail
-        : [files.thumbnail]
-      : [];
-
-    const albumTypes: string[] = album_type ? JSON.parse(album_type) : [];
+    const albumType: string[] = album_type ? JSON.parse(album_type) : [];
     const uploadedFiles: unknown[] = [];
 
-    const mediaFolder = "service_media";
-    const thumbFolder = "video_thumbnail";
-    const bucketUrl = process.env.BUCKET_URL ?? "";
+    const folder_name = "service_media";
+    const folder_name_thumbnail = "video_thumbnail";
 
-    for (let i = 0; i < albumTypes.length; i += 1) {
-      const currentType = albumTypes[i];
-      const mediaFile = albumFiles[i];
-
-      if (!mediaFile) continue;
-
-      const uploadRes = await uploadMediaIntoS3Bucket(
-        {
-          originalFilename: mediaFile.name,
-          mimetype: mediaFile.type,
-          data: mediaFile.data,
-          path: mediaFile.path,
-        } as MediaFile,
-        mediaFolder,
-        mediaFile.type,
-      );
-
-      if (!uploadRes.status) {
-        await errorRes(
-          res,
-          res.__("Media upload failed for one of the files."),
-        );
+    /* ---------- loop through each file ---------- */
+    for (let i = 0; i < albumType.length; i++) {
+      const album_type_i = albumType[i];
+      const media = album[i];
+      if (!media) {
+        errorRes(res, res.__("Media upload failed for one of the files."));
         return;
       }
 
-      const mediaPath = `${mediaFolder}/${uploadRes.file_name}`;
+      const content_type = media.type;
+      const mediaFile: MediaFile = {
+        originalFilename: media.originalFilename,
+        path: media.path,
+        mimetype: media.type,
+        data: Buffer.alloc(0),
+      };
 
-      if (currentType === "image") {
-        const doc = await service_albums.create({
+      const res_upload_file = await uploadMediaIntoS3Bucket(
+        mediaFile,
+        folder_name,
+        content_type,
+      );
+
+      if (!res_upload_file.status) {
+        errorRes(res, res.__("Media upload failed for one of the files."));
+        return;
+      }
+
+      /* ---------- image branch ---------- */
+      if (album_type_i === "image") {
+        const user_image_path = `${folder_name}/` + res_upload_file.file_name;
+
+        const add_albums = await service_albums.create({
           user_id,
-          service_id: service_id as Types.ObjectId,
-          album_type: "image",
+          service_id,
+          album_type: album_type_i,
           album_thumbnail: null,
-          album_path: mediaPath,
+          album_path: user_image_path,
         });
 
-        doc.album_path = bucketUrl + doc.album_path;
-        uploadedFiles.push(doc);
+        add_albums.album_path = process.env.BUCKET_URL + add_albums.album_path;
+
+        uploadedFiles.push(add_albums);
         continue;
       }
 
-      if (currentType === "video") {
-        let thumbPath: string | null = null;
+      /* ---------- video branch ---------- */
+      if (album_type_i === "video") {
+        const file_name = res_upload_file.file_name!;
+        const user_image_path = `${folder_name}/${file_name}`;
+        let thumbnail_image_path: string | null = null;
 
-        if (thumbnailFiles[i]) {
-          const thumbRes = await uploadMediaIntoS3Bucket(
-            {
-              originalFilename: thumbnailFiles[i].name,
-              mimetype: thumbnailFiles[i].type,
-              data: thumbnailFiles[i].data,
-              path: thumbnailFiles[i].path,
-            } as MediaFile,
-            thumbFolder,
-            thumbnailFiles[i].type,
+        if (thumbnail && thumbnail[i]) {
+          const thumbSrc = thumbnail[i];
+          const thumbMedia: MediaFile = {
+            originalFilename: thumbSrc.originalFilename,
+            path: thumbSrc.path,
+            mimetype: thumbSrc.type,
+            data: Buffer.alloc(0),
+          };
+
+          const res_upload_thumb = await uploadMediaIntoS3Bucket(
+            thumbMedia,
+            folder_name_thumbnail,
+            thumbSrc.type,
           );
 
-          if (!thumbRes.status) {
-            await errorRes(res, res.__("Thumbnail upload failed."));
+          if (!res_upload_thumb.status) {
+            errorRes(res, res.__("Media upload failed for one of the files."));
             return;
           }
-          thumbPath = `${thumbFolder}/${thumbRes.file_name}`;
+
+          thumbnail_image_path = `${folder_name_thumbnail}/${res_upload_thumb.file_name}`;
         }
 
-        const doc = await service_albums.create({
+        const add_albums = await service_albums.create({
           user_id,
-          service_id: service_id as Types.ObjectId,
-          album_type: "video",
-          album_thumbnail: thumbPath,
-          album_path: mediaPath,
+          service_id,
+          album_type: album_type_i,
+          album_thumbnail: thumbnail_image_path,
+          album_path: user_image_path,
         });
 
-        doc.album_path = bucketUrl + doc.album_path;
-        if (doc.album_thumbnail) {
-          doc.album_thumbnail = bucketUrl + doc.album_thumbnail;
+        add_albums.album_path = process.env.BUCKET_URL + add_albums.album_path;
+        if (thumbnail_image_path) {
+          add_albums.album_thumbnail =
+            process.env.BUCKET_URL + add_albums.album_thumbnail;
         }
-        uploadedFiles.push(doc);
+
+        uploadedFiles.push(add_albums);
       }
     }
 
-    await successRes(
+    successRes(
       res,
       res.__("Service media uploaded successfully."),
       uploadedFiles,
     );
-  } catch (err) {
-    console.error("uploadServiceMedia error:", err);
-    await errorRes(res, res.__("Internal server error"));
+  } catch (error) {
+    console.error("Error :", error);
+    errorRes(res, res.__("Internal server error"));
   }
 };
 

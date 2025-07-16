@@ -47,7 +47,7 @@ const configureApp = (server: express.Application) => {
       ":method :host :url :status :res[content-length] - :response-time ms",
     ),
   );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   server.use(function (req: Request, res: Response, next: NextFunction) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header(

@@ -19,7 +19,6 @@ const model_users_1 = require("../../../model/model.users");
 const model_guests_1 = require("../../../model/model.guests");
 const model_notifications_1 = require("../../../model/model.notifications");
 const model_communities_albums_1 = require("../../../model/model.communities_albums");
-const fs_1 = __importDefault(require("fs"));
 const response_functions_1 = require("../../../../util/response_functions");
 const user_function_1 = require("../../../../util/user_function");
 const send_notifications_1 = require("../../../../util/send_notifications");
@@ -249,104 +248,99 @@ const deleteCommunity = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.deleteCommunity = deleteCommunity;
-const uploadCommunityMedia = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+const uploadCommunityMedia = (
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const user_id = req.user._id;
         const { community_id, album_type, ln } = req.body;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let { album, thumbnail } = (_a = req.files) !== null && _a !== void 0 ? _a : {};
         i18n_1.default.setLocale(req, ln);
+        if (album && !Array.isArray(album))
+            album = [album];
+        if (thumbnail && !Array.isArray(thumbnail))
+            thumbnail = [thumbnail];
+        if (!album || !Array.isArray(album)) {
+            (0, response_functions_1.errorRes)(res, res.__("No media files provided."));
+            return;
+        }
+        const albumType = album_type ? JSON.parse(album_type) : [];
+        const uploadedFiles = [];
         const folder_name = "community_media";
         const folder_name_thumbnail = "video_thumbnail";
-        if (!req.files || typeof req.files !== "object") {
-            yield (0, response_functions_1.errorRes)(res, res.__("No files were uploaded."));
-            return;
-        }
-        const convertToMediaFile = (file) => ({
-            originalFilename: file.originalname,
-            path: file.path,
-            mimetype: file.mimetype,
-            data: fs_1.default.readFileSync(file.path),
-        });
-        let album = ((_a = req.files["album"]) === null || _a === void 0 ? void 0 : _a.map(convertToMediaFile)) || [];
-        let thumbnail = ((_b = req.files["thumbnail"]) === null || _b === void 0 ? void 0 : _b.map(convertToMediaFile)) || [];
-        if (!album) {
-            yield (0, response_functions_1.errorRes)(res, res.__("Album file is missing."));
-            return;
-        }
-        if (!Array.isArray(album)) {
-            album = [album];
-        }
-        if (thumbnail && !Array.isArray(thumbnail)) {
-            thumbnail = [thumbnail];
-        }
-        let albumType = [];
-        if (album_type) {
-            albumType = JSON.parse(album_type);
-        }
-        const uploadedFiles = [];
         for (let i = 0; i < albumType.length; i++) {
             const album_type_i = albumType[i];
-            const media = thumbnail[0];
-            const content_type = media.mimetype || "image/jpeg";
-            const fileData = fs_1.default.readFileSync(media.path);
+            const media = album[i];
+            if (!media) {
+                (0, response_functions_1.errorRes)(res, res.__("Media upload failed for one of the files."));
+                return;
+            }
+            const content_type = media.type;
             const mediaFile = {
                 originalFilename: media.originalFilename,
                 path: media.path,
-                mimetype: media.mimetype,
-                data: fileData,
+                mimetype: media.type,
+                data: Buffer.alloc(0),
             };
             const res_upload_file = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(mediaFile, folder_name, content_type);
-            if (res_upload_file.status) {
-                const user_image_path = `${folder_name}/` + res_upload_file.file_name;
-                if (album_type_i === "image") {
-                    const fileData = {
-                        user_id,
-                        community_id,
-                        album_type: album_type_i,
-                        album_thumbnail: null,
-                        album_path: user_image_path,
-                    };
-                    const add_albums = yield model_communities_albums_1.communities_albums.create(fileData);
-                    add_albums.album_path =
-                        process.env.BUCKET_URL + add_albums.album_path;
-                    uploadedFiles.push(add_albums);
-                }
-                if (album_type_i === "video") {
-                    let thumbnail_image_path = null;
-                    if (thumbnail && thumbnail[i]) {
-                        const res_upload_thumb = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(thumbnail[i], folder_name_thumbnail, "image/jpeg");
-                        if (res_upload_thumb.status) {
-                            thumbnail_image_path = `${folder_name_thumbnail}/${res_upload_thumb.file_name}`;
-                        }
-                    }
-                    const fileData = {
-                        user_id,
-                        community_id,
-                        album_type: album_type_i,
-                        album_thumbnail: thumbnail_image_path,
-                        album_path: user_image_path,
-                    };
-                    const add_albums = yield model_communities_albums_1.communities_albums.create(fileData);
-                    add_albums.album_path =
-                        process.env.BUCKET_URL + add_albums.album_path;
-                    add_albums.album_thumbnail = thumbnail_image_path
-                        ? process.env.BUCKET_URL + thumbnail_image_path
-                        : undefined;
-                    uploadedFiles.push(add_albums);
-                }
-            }
-            else {
-                yield (0, response_functions_1.errorRes)(res, res.__("Media upload failed for one of the files."));
+            if (!res_upload_file.status) {
+                (0, response_functions_1.errorRes)(res, res.__("Media upload failed for one of the files."));
                 return;
             }
+            if (album_type_i === "image") {
+                const user_image_path = `${folder_name}/` + res_upload_file.file_name;
+                const add_albums = yield model_communities_albums_1.communities_albums.create({
+                    user_id,
+                    community_id,
+                    album_type: album_type_i,
+                    album_thumbnail: null,
+                    album_path: user_image_path,
+                });
+                add_albums.album_path = process.env.BUCKET_URL + add_albums.album_path;
+                uploadedFiles.push(add_albums);
+                continue;
+            }
+            if (album_type_i === "video") {
+                const file_name = res_upload_file.file_name;
+                const user_image_path = `${folder_name}/${file_name}`;
+                let thumbnail_image_path = null;
+                if (thumbnail && thumbnail[i]) {
+                    const thumbSrc = thumbnail[i];
+                    const thumbMedia = {
+                        originalFilename: thumbSrc.originalFilename,
+                        path: thumbSrc.path,
+                        mimetype: thumbSrc.type,
+                        data: Buffer.alloc(0),
+                    };
+                    const res_upload_thumb = yield (0, bucket_manager_1.uploadMediaIntoS3Bucket)(thumbMedia, folder_name_thumbnail, thumbSrc.type);
+                    if (!res_upload_thumb.status) {
+                        (0, response_functions_1.errorRes)(res, res.__("Media upload failed for one of the files."));
+                        return;
+                    }
+                    thumbnail_image_path = `${folder_name_thumbnail}/${res_upload_thumb.file_name}`;
+                }
+                const add_albums = yield model_communities_albums_1.communities_albums.create({
+                    user_id,
+                    community_id,
+                    album_type: album_type_i,
+                    album_thumbnail: thumbnail_image_path,
+                    album_path: user_image_path,
+                });
+                add_albums.album_path = process.env.BUCKET_URL + add_albums.album_path;
+                if (thumbnail_image_path) {
+                    add_albums.album_thumbnail =
+                        process.env.BUCKET_URL + add_albums.album_thumbnail;
+                }
+                uploadedFiles.push(add_albums);
+            }
         }
-        yield (0, response_functions_1.successRes)(res, res.__("Community media uploaded successfully."), uploadedFiles);
-        return;
+        (0, response_functions_1.successRes)(res, res.__("Community media uploaded successfully."), uploadedFiles);
     }
     catch (error) {
-        console.log("Error : ", error);
-        yield (0, response_functions_1.errorRes)(res, res.__("Internal server error"));
-        return;
+        console.error("Error :", error);
+        (0, response_functions_1.errorRes)(res, res.__("Internal server error"));
     }
 });
 exports.uploadCommunityMedia = uploadCommunityMedia;

@@ -5,6 +5,7 @@ const multipartMiddleware = multipart();
 
 import { userAuth } from "../../../middlewares/auth";
 import { validateRequest } from "../../../middlewares/validation";
+import { IUserRequest } from "./../../../controller/app/v1/pet.controller";
 
 import {
   addPet,
@@ -48,7 +49,7 @@ app_router.post(
   userAuth,
   multipartMiddleware,
   validateRequest(addPetDto),
-  addPet,
+  (req, res) => addPet(req as IUserRequest, res),
 );
 app_router.post(
   "/add_multiple_pet",
@@ -61,95 +62,95 @@ app_router.post(
   userAuth,
   multipartMiddleware,
   validateRequest(editPetDto),
-  editPet,
+  (req, res) => editPet(req as IUserRequest, res),
 );
 app_router.post(
   "/delete_pet",
   userAuth,
   multipartMiddleware,
   validateRequest(deletePetDto),
-  deletePet,
+  (req, res) => deletePet(req as IUserRequest, res),
 );
 app_router.post(
   "/adopt_pet",
   userAuth,
   multipartMiddleware,
   validateRequest(adoptPetDto),
-  adoptPet,
+  (req, res) => adoptPet(req as IUserRequest, res),
 );
 app_router.post(
   "/like_dislike_pet",
   userAuth,
   multipartMiddleware,
   validateRequest(likeDislikePetsDto),
-  likeDislikePets,
+  (req, res) => likeDislikePets(req as IUserRequest, res),
 );
 app_router.post(
   "/upload_pet_media",
   userAuth,
   multipartMiddleware,
   validateRequest(uploadPetMediaDto),
-  uploadPetMedia,
+  (req, res) => uploadPetMedia(req as IUserRequest, res),
 );
 app_router.post(
   "/remove_pet_media",
   userAuth,
   multipartMiddleware,
   validateRequest(removePetMediaDto),
-  removePetMedia,
+  (req, res) => removePetMedia(req as IUserRequest, res),
 );
 app_router.post(
   "/pet_detail",
   userAuth,
   multipartMiddleware,
   validateRequest(petDetailsDto),
-  petDetails,
+  (req, res) => petDetails(req as IUserRequest, res),
 );
 app_router.post(
   "/guest_pet_detail",
   multipartMiddleware,
   validateRequest(guestPetDetailsDto),
-  guestPetDetails,
+  (req, res) => guestPetDetails(req as IUserRequest, res),
 );
 app_router.post(
   "/get_pet_data",
   userAuth,
   multipartMiddleware,
   validateRequest(petUpdatedDataDto),
-  petUpdatedData,
+  (req, res) => petUpdatedData(req as IUserRequest, res),
 );
 app_router.post(
   "/pet_list",
   userAuth,
   multipartMiddleware,
   validateRequest(petListingDto),
-  petListing,
+  (req, res) => petListing(req as IUserRequest, res),
 );
 app_router.post(
   "/guest_pet_list",
   multipartMiddleware,
   validateRequest(guestPetListingDto),
-  guestPetListing,
+  (req, res) => guestPetListing(req as IUserRequest, res),
 );
 app_router.post(
   "/pet_favorite_list",
   userAuth,
   multipartMiddleware,
   validateRequest(petFavoriteListDto),
-  petFavoriteList,
+  (req, res) => petFavoriteList(req as IUserRequest, res),
 );
 app_router.post(
   "/user_pet_list",
   userAuth,
   multipartMiddleware,
   validateRequest(userPetListingDto),
-  userPetListing,
+  (req, res) => userPetListing(req as IUserRequest, res),
 );
 app_router.post(
   "/guest_user_pet_list",
   multipartMiddleware,
   validateRequest(guestUserPetListingDto),
-  guestUserPetListing,
+  (req, res) => guestUserPetListing(req as IUserRequest, res),
 );
 
 export default app_router;

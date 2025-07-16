@@ -17,6 +17,13 @@ import {
 } from "./../../../../util/response_functions";
 import { multiNotificationSend } from "./../../../../util/send_notifications";
 
+export interface IUserRequest extends Request {
+  user: {
+    _id: string;
+    [key: string]: unknown;
+  };
+}
+
 import {
   findPet,
   findMultipleUserDeviceToken,
@@ -62,7 +69,10 @@ interface NotificationData {
   sender_id?: string;
 }
 
-export const addPet = async (req: Request, res: Response): Promise<void> => {
+export const addPet = async (
+  req: IUserRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const user_id = req.user._id;
 
@@ -266,7 +276,10 @@ export const addMultiplePet = async (
   }
 };
 
-export const editPet = async (req: Request, res: Response): Promise<void> => {
+export const editPet = async (
+  req: IUserRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const user_id = req.user._id;
 
@@ -352,7 +365,10 @@ export const editPet = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const deletePet = async (req: Request, res: Response): Promise<void> => {
+export const deletePet = async (
+  req: IUserRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const user_id = req.user._id;
 
@@ -415,7 +431,10 @@ export const deletePet = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const adoptPet = async (req: Request, res: Response): Promise<void> => {
+export const adoptPet = async (
+  req: IUserRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const user_id = req.user._id;
 
@@ -509,7 +528,7 @@ export const adoptPet = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const likeDislikePets = async (
-  req: Request,
+  req: IUserRequest,
   res: Response,
 ): Promise<void> => {
   try {
@@ -550,159 +569,137 @@ export const likeDislikePets = async (
   }
 };
 
-export interface MultipartFile {
-  fieldName: string;
-  originalFilename: string;
-  path: string;
-  headers: {
-    "content-disposition": string;
-    "content-type": string;
-  };
-  size: number;
-  name: string;
-  type: string;
-}
-interface S3File {
-  originalFilename: string;
-  path: string;
-  type: string;
-  key: string;
-  mimetype: string;
-  name: string;
-  headers: Record<string, string>;
-  data: Buffer;
-  [key: string]: unknown;
-}
-
 export const uploadPetMedia = async (
-  req: Request,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  req: IUserRequest & { user: { _id: string }; files?: any },
   res: Response,
 ): Promise<void> => {
   try {
     const user_id = req.user._id;
+    const { pet_id, album_type, ln } = req.body as {
+      pet_id: string;
+      album_type?: string;
+      ln: string;
+    };
 
-    const { pet_id, album_type, ln = "en" } = req.body;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let { album, thumbnail }: { album: any; thumbnail?: any } = req.files ?? {};
+
     i18n.setLocale(req, ln);
 
-    interface FilesObject {
-      album?: S3File | S3File[];
-      thumbnail?: S3File | S3File[];
+    if (album && !Array.isArray(album)) album = [album];
+    if (thumbnail && !Array.isArray(thumbnail)) thumbnail = [thumbnail];
+
+    if (!album || !Array.isArray(album)) {
+      errorRes(res, res.__("No media files provided."));
+      return;
     }
 
-    const files = (req.files as unknown as FilesObject) ?? {};
-
-    // Always work with arrays
-    const albumFiles: S3File[] = files.album
-      ? Array.isArray(files.album)
-        ? files.album
-        : [files.album]
-      : [];
-
-    const thumbnailFiles: S3File[] = files.thumbnail
-      ? Array.isArray(files.thumbnail)
-        ? files.thumbnail
-        : [files.thumbnail]
-      : [];
-
-    const albumTypes: string[] = album_type ? JSON.parse(album_type) : [];
+    const albumType: string[] = album_type ? JSON.parse(album_type) : [];
     const uploadedFiles: unknown[] = [];
 
-    const mediaFolder = "pet_media";
-    const thumbFolder = "video_thumbnail";
-    const bucketUrl = process.env.BUCKET_URL ?? "";
+    const folder_name = "pet_media";
+    const folder_name_thumbnail = "video_thumbnail";
 
-    for (let i = 0; i < albumTypes.length; i += 1) {
-      const currentType = albumTypes[i]; // "image" | "video"
-      const mediaFile = albumFiles[i];
-
-      // Skip if the arrays are mismatched
-      if (!mediaFile) continue;
-
-      const uploadRes = await uploadMediaIntoS3Bucket(
-        {
-          originalFilename: mediaFile.name,
-          mimetype: mediaFile.type,
-          data: mediaFile.data,
-          path: mediaFile.path,
-        } as MediaFile,
-        mediaFolder,
-        mediaFile.type,
-      );
-
-      if (!uploadRes.status) {
-        await errorRes(
-          res,
-          res.__("Media upload failed for one of the files."),
-        );
+    for (let i = 0; i < albumType.length; i++) {
+      const album_type_i = albumType[i];
+      const media = album[i];
+      if (!media) {
+        errorRes(res, res.__("Media upload failed for one of the files."));
         return;
       }
 
-      // Shared path variables
-      const fileName = uploadRes.file_name;
-      const mediaPath = `${mediaFolder}/${fileName}`;
+      const content_type = media.type;
+      const mediaFile: MediaFile = {
+        originalFilename: media.originalFilename,
+        path: media.path,
+        mimetype: media.type,
+        data: Buffer.alloc(0),
+      };
 
-      if (currentType === "image") {
-        const doc = await pet_albums.create({
+      const res_upload_file = await uploadMediaIntoS3Bucket(
+        mediaFile,
+        folder_name,
+        content_type,
+      );
+
+      if (!res_upload_file.status) {
+        errorRes(res, res.__("Media upload failed for one of the files."));
+        return;
+      }
+
+      if (album_type_i === "image") {
+        const user_image_path = `${folder_name}/` + res_upload_file.file_name;
+
+        const add_albums = await pet_albums.create({
           user_id,
           pet_id,
-          album_type: "image",
+          album_type: album_type_i,
           album_thumbnail: null,
-          album_path: mediaPath,
+          album_path: user_image_path,
         });
 
-        doc.album_path = bucketUrl + doc.album_path;
-        uploadedFiles.push(doc);
+        add_albums.album_path = process.env.BUCKET_URL + add_albums.album_path;
+
+        uploadedFiles.push(add_albums);
         continue;
       }
 
-      if (currentType === "video") {
-        let thumbPath: string | null = null;
+      if (album_type_i === "video") {
+        const file_name = res_upload_file.file_name!;
+        const user_image_path = `${folder_name}/${file_name}`;
+        let thumbnail_image_path: string | null = null;
 
-        if (thumbnailFiles[i]) {
-          const thumbRes = await uploadMediaIntoS3Bucket(
-            thumbnailFiles[i],
-            thumbFolder,
-            thumbnailFiles[i].type,
+        if (thumbnail && thumbnail[i]) {
+          const thumbSrc = thumbnail[i];
+          const thumbMedia: MediaFile = {
+            originalFilename: thumbSrc.originalFilename,
+            path: thumbSrc.path,
+            mimetype: thumbSrc.type,
+            data: Buffer.alloc(0),
+          };
+
+          const res_upload_thumb = await uploadMediaIntoS3Bucket(
+            thumbMedia,
+            folder_name_thumbnail,
+            thumbSrc.type,
           );
 
-          if (!thumbRes.status) {
-            await errorRes(res, res.__("Thumbnail upload failed."));
+          if (!res_upload_thumb.status) {
+            errorRes(res, res.__("Media upload failed for one of the files."));
             return;
           }
 
-          thumbPath = `${thumbFolder}/${thumbRes.file_name}`;
+          thumbnail_image_path = `${folder_name_thumbnail}/${res_upload_thumb.file_name}`;
         }
 
-        const doc = await pet_albums.create({
+        const add_albums = await pet_albums.create({
           user_id,
           pet_id,
-          album_type: "video",
-          album_thumbnail: thumbPath,
-          album_path: mediaPath,
+          album_type: album_type_i,
+          album_thumbnail: thumbnail_image_path,
+          album_path: user_image_path,
         });
 
-        doc.album_path = bucketUrl + doc.album_path;
-        if (doc.album_thumbnail) {
-          doc.album_thumbnail = bucketUrl + doc.album_thumbnail;
+        add_albums.album_path = process.env.BUCKET_URL + add_albums.album_path;
+        if (thumbnail_image_path) {
+          add_albums.album_thumbnail =
+            process.env.BUCKET_URL + add_albums.album_thumbnail;
         }
-        uploadedFiles.push(doc);
+
+        uploadedFiles.push(add_albums);
       }
     }
 
-    /* ── Success response ───────────────────────────────────── */
-    await successRes(
-      res,
-      res.__("Pet media uploaded successfully."),
-      uploadedFiles,
-    );
-  } catch (err) {
-    console.error("uploadPetMedia error:", err);
-    await errorRes(res, res.__("Internal server error"));
+    successRes(res, res.__("Pet media uploaded successfully."), uploadedFiles);
+  } catch (error) {
+    console.error("Error :", error);
+    errorRes(res, res.__("Internal server error"));
   }
 };
 
 export const removePetMedia = async (
-  req: Request,
+  req: IUserRequest,
   res: Response,
 ): Promise<void> => {
   try {
@@ -743,7 +740,7 @@ export const removePetMedia = async (
 };
 
 export const petDetails = async (
-  req: Request,
+  req: IUserRequest,
   res: Response,
 ): Promise<void> => {
   try {
@@ -918,7 +915,7 @@ export const petDetails = async (
 };
 
 export const guestPetDetails = async (
-  req: Request,
+  req: IUserRequest,
   res: Response,
 ): Promise<void> => {
   try {
@@ -1067,7 +1064,7 @@ export const guestPetDetails = async (
 };
 
 export const petUpdatedData = async (
-  req: Request,
+  req: IUserRequest,
   res: Response,
 ): Promise<void> => {
   try {
@@ -1583,7 +1580,7 @@ export const guestPetListing = async (
 };
 
 export const petFavoriteList = async (
-  req: Request,
+  req: IUserRequest,
   res: Response,
 ): Promise<void> => {
   try {
@@ -1718,7 +1715,7 @@ export const petFavoriteList = async (
 };
 
 export const userPetListing = async (
-  req: Request,
+  req: IUserRequest,
   res: Response,
 ): Promise<void> => {
   try {

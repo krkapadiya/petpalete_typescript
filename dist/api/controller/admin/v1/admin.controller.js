@@ -185,10 +185,12 @@ const adminVerifyOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
             yield (0, response_functions_1.errorRes)(res, res.__("No account associated with this email address was found."));
             return;
         }
-        if (find_admin.otp === otp) {
+        if (String(find_admin.otp) === String(otp)) {
             const update_data = {
                 otp: null,
             };
+            console.log("otp--------", otp, typeof otp);
+            console.log("find_admin.otp--------", find_admin.otp, typeof find_admin.otp);
             yield model_email_varifications_1.email_verifications.updateOne({
                 email_address: email_address,
                 is_email_verified: true,
