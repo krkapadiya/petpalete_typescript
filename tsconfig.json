@@ -26,6 +26,6 @@
     "skipLibCheck": true
     // "incremental": true
   },
-  "include": ["src"], // Include the source files in the 'src' directory
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "eslint.config.mjs"],
   "exclude": ["node_modules", "dist"] // Exclude 'node_modules' and 'dist' directories
 }
