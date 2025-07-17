@@ -4,7 +4,6 @@ const stripe = new Stripe(process.env.SECRET_KEY as string);
 import { Request, Response } from "express";
 import { IUser } from "./../../../model/model.users";
 import { MediaFile } from "./../../../../util/bucket_manager";
-
 import { userToken } from "./../../../../util/token";
 
 import { users } from "./../../../model/model.users";
@@ -22,7 +21,6 @@ import { user_albums } from "./../../../model/model.user_albums";
 import { email_verifications } from "./../../../model/model.email_varifications";
 import { pet_likes } from "./../../../model/model.pet_likes";
 import { service_likes } from "./../../../model/model.service_likes";
-// import { communities_albums } from "./../../../model/model.communities_albums";
 
 import {
   errorRes,
@@ -66,8 +64,6 @@ import {
   uploadMediaIntoS3Bucket,
   removeMediaFromS3Bucket,
 } from "./../../../../util/bucket_manager";
-// import { string } from "joi";
-// import { Types } from "mongoose";
 
 interface UserRequestBody {
   device_token: string;

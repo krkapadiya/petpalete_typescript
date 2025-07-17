@@ -44,7 +44,7 @@ admin_router.post(
   userAuth,
   multipartMiddleware,
   validateRequest(adminChangePasswordDto),
-  adminChangePassword as unknown as RequestHandler,
+  adminChangePassword as RequestHandler,
 );
 admin_router.post(
   "/send_otp_forgot_password",
@@ -69,7 +69,7 @@ admin_router.post(
   userAuth,
   multipartMiddleware,
   validateRequest(adminLogoutDto),
-  adminLogout as unknown as RequestHandler,
+  adminLogout as RequestHandler,
 );
 admin_router.post(
   "/dashboard",

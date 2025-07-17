@@ -1,15 +1,11 @@
 import express, { Request } from "express";
 const app_router = express.Router();
-import {
-  AuthRequest,
-  // UploadMediaRequest,
-} from "./../../../controller/app/v1/user.controller";
+import { AuthRequest } from "./../../../controller/app/v1/user.controller";
 import multipart from "connect-multiparty";
 const multipartMiddleware = multipart();
 
 import { validateRequest } from "../../../middlewares/validation";
 import { userAuth, userAuthLogout } from "../../../middlewares/auth";
-// import { IUserRequest } from "./../../../controller/app/v1/user.controller";
 
 import {
   guestSession,
@@ -244,6 +240,7 @@ app_router.post(
   faqListing,
 );
 app_router.post("/upload_socket_media", multipartMiddleware, uploadSocketMedia);
+
 app_router.post(
   "/get_user_data",
   userAuth,
@@ -273,8 +270,7 @@ app_router.post(
   multipartMiddleware,
   validateRequest(addPaymentDto),
   (req, res, next) => {
-    // Cast once, then forward to your strongly‑typed controller
-    addPayment(req as unknown as AuthRequest, res).catch(next);
+    addPayment(req as AuthRequest, res).catch(next);
   },
 );
 
