@@ -4,6 +4,7 @@ import multipart from "connect-multiparty";
 const multipartMiddleware = multipart();
 import { validateRequest } from "../../../middlewares/validation";
 import { userAuth } from "../../../middlewares/auth";
+import { IUserRequest } from "../../../controller/app/v1/service.controller";
 
 import {
   addService,
@@ -44,7 +45,7 @@ service_router.post(
   userAuth,
   multipartMiddleware,
   validateRequest(addServiceDto),
-  addService,
+  (req, res) => addService(req as IUserRequest, res),
 );
 service_router.post(
   "/add_multiple_service",
@@ -78,7 +79,7 @@ service_router.post(
   userAuth,
   multipartMiddleware,
   validateRequest(uploadServiceMediaDto),
-  uploadServiceMedia,
+  (req, res) => uploadServiceMedia(req as IUserRequest, res),
 );
 service_router.post(
   "/remove_service_media",

@@ -11,6 +11,13 @@ import { IUser } from "./../../../model/model.users";
 import { Types } from "mongoose";
 import { MediaFile } from "./../../../../util/bucket_manager";
 
+export interface IUserRequest extends Request {
+  user: {
+    _id: string;
+    [key: string]: unknown;
+  };
+}
+
 interface NotificationData {
   device_token: string[];
   noti_title: string;
@@ -55,7 +62,7 @@ import {
 } from "./../../../../util/bucket_manager";
 
 export const addService = async (
-  req: Request,
+  req: IUserRequest,
   res: Response,
 ): Promise<Response> => {
   try {
