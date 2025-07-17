@@ -81,18 +81,19 @@ exports.default = (io) => {
         }));
         socket.on("chatUserList", (data) => __awaiter(void 0, void 0, void 0, function* () {
             try {
-                data = Object.assign(Object.assign({}, data), { user_id: socket.user._id });
+                data = Object.assign(Object.assign({}, data), { user_id: socket.user._id.toString() });
                 console.log("chatUserList  on :: ", data);
                 const { ln = "en" } = data;
                 i18n_1.default.setLocale(ln);
                 socket.join(data.user_id);
-                const find_user_list = yield chatUserList(data);
+                const find_user_list = yield (0, chat_1.chatUserList)(data);
                 socket.emit("chatUserList", find_user_list);
                 return;
             }
             catch (error) {
                 console.log("chatUserList Error ON:", error instanceof Error ? error.message : String(error));
-                return (0, response_functions_1.socketErrorRes)(i18n_1.default.__("Something went wrong!"));
+                yield (0, response_functions_1.socketErrorRes)(i18n_1.default.__("Something went wrong!"));
+                return;
             }
         }));
         socket.on("sendMessage", (data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -300,27 +301,16 @@ exports.default = (io) => {
                 return;
             }
         }));
-        //   socket.on(
-        //     "changeScreenStatus",
-        //     async (data: Partial<changeScreenStatusData>) => {
-        //       try {
-        //         data = {
-        //           ...data,
-        //           user_id: socket.user._id,
-        //           socket_id: socket.id,
-        //         };
-        //         console.log(" -----------  changeScreenStatus  -----------  ", data);
-        //         const change_screen_status = await changeScreenStatus(
-        //           data as changeScreenStatusData,
-        //         );
-        //         socket.emit("changeScreenStatus", change_screen_status);
-        //       } catch (error) {
-        //         console.log(
-        //           "=== changeScreenStatus ===",
-        //           error instanceof Error ? error.message : String(error),
-        //         );
-        //       }
-        //     });
-        //   });
+        socket.on("changeScreenStatus", (data) => __awaiter(void 0, void 0, void 0, function* () {
+            try {
+                data = Object.assign(Object.assign({}, data), { user_id: socket.user._id.toString(), socket_id: socket.id });
+                console.log(" -----------  changeScreenStatus  -----------  ", data);
+                const change_screen_status = yield (0, chat_1.changeScreenStatus)(data);
+                socket.emit("changeScreenStatus", change_screen_status);
+            }
+            catch (error) {
+                console.log("=== changeScreenStatus ===", error instanceof Error ? error.message : String(error));
+            }
+        }));
     });
 };

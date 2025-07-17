@@ -23,7 +23,7 @@
     ],
     "@typescript-eslint/explicit-module-boundary-types": "off",
     // "@typescript-eslint/no-explicit-any": "off",
-    "no-console": "error",
+    // "no-console": "error",
     "eqeqeq": ["error", "always"],
     "prettier/prettier": "error",
     "strict": ["error", "global"]

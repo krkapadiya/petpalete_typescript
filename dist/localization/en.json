@@ -45,5 +45,6 @@
 	"You do not have permission to edit this message": "You do not have permission to edit this message",
 	"You do not have permission to delete this message": "You do not have permission to delete this message",
 	"Chat deleted successfully": "Chat deleted successfully",
-	"Messages read successfully": "Messages read successfully"
+	"Messages read successfully": "Messages read successfully",
+	"User list get successfully": "User list get successfully"
 }

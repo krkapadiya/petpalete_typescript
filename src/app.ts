@@ -48,7 +48,7 @@ const configureApp = (server: express.Application) => {
     ),
   );
 
-  server.use(function (req: Request, res: Response, next: NextFunction) {
+  server.use(function (_req: Request, res: Response, next: NextFunction) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header(
       "Access-Control-Allow-Headers",

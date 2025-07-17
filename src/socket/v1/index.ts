@@ -10,7 +10,7 @@ import {
   deleteMessage,
   readMessage,
   deleteChatRoom,
-  //   changeScreenStatus,
+  changeScreenStatus,
   deleteMessageForEveryOne,
   chatUserList,
 } from "./chat";
@@ -32,7 +32,7 @@ import {
   deleteChatRoomData,
   readMessageData,
   chatUserListData,
-  //   changeScreenStatusData,
+  changeScreenStatusData,
 } from "./chat";
 
 export default (io: Server) => {
@@ -450,29 +450,29 @@ export default (io: Server) => {
       },
     );
 
-    //   socket.on(
-    //     "changeScreenStatus",
-    //     async (data: Partial<changeScreenStatusData>) => {
-    //       try {
-    //         data = {
-    //           ...data,
-    //           user_id: socket.user._id,
-    //           socket_id: socket.id,
-    //         };
-    //         console.log(" -----------  changeScreenStatus  -----------  ", data);
+    socket.on(
+      "changeScreenStatus",
+      async (data: Partial<changeScreenStatusData>) => {
+        try {
+          data = {
+            ...data,
+            user_id: socket.user._id.toString(),
+            socket_id: socket.id,
+          };
+          console.log(" -----------  changeScreenStatus  -----------  ", data);
 
-    //         const change_screen_status = await changeScreenStatus(
-    //           data as changeScreenStatusData,
-    //         );
+          const change_screen_status = await changeScreenStatus(
+            data as changeScreenStatusData,
+          );
 
-    //         socket.emit("changeScreenStatus", change_screen_status);
-    //       } catch (error) {
-    //         console.log(
-    //           "=== changeScreenStatus ===",
-    //           error instanceof Error ? error.message : String(error),
-    //         );
-    //       }
-    //     });
-    //   });
+          socket.emit("changeScreenStatus", change_screen_status);
+        } catch (error) {
+          console.log(
+            "=== changeScreenStatus ===",
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      },
+    );
   });
 };

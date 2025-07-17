@@ -1337,33 +1337,68 @@ exports.deleteChatRoom = deleteChatRoom;
 const changeScreenStatus = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { user_id, screen_status, chat_room_id, socket_id } = data;
+        // console.log(
+        //   "before converstion------",
+        //   "user_id:",
+        //   typeof user_id,
+        //   "chat_room_id:",
+        //   typeof chat_room_id,
+        // );
+        const UserObjectId = new mongoose_1.default.Types.ObjectId(user_id);
+        const chatRoomObjectId = new mongoose_1.default.Types.ObjectId(chat_room_id);
+        // console.log(
+        //   "after converstion------",
+        //   "user_id:",
+        //   typeof UserObjectId,
+        //   "chat_room_id:",
+        //   typeof chatRoomObjectId,
+        // );
         const find_chat_room = yield model_chat_rooms_1.chat_rooms.findOne({
-            _id: chat_room_id,
+            _id: chatRoomObjectId,
             is_deleted: false,
         });
         if (!find_chat_room) {
             return (0, response_functions_1.socketErrorRes)("Chat room not found");
         }
-        if (screen_status === "true" || screen_status === true) {
-            yield model_user_sessions_1.user_sessions.updateOne({
-                user_id: user_id,
-                socket_id: socket_id,
-            }, {
-                $set: {
-                    chat_room_id: chat_room_id,
-                },
-            }, { new: true });
-        }
-        else {
-            yield model_user_sessions_1.user_sessions.updateOne({
-                user_id: user_id,
-                socket_id: socket_id,
-            }, {
-                $set: {
-                    chat_room_id: null,
-                },
-            }, { new: true });
-        }
+        const result = yield model_user_sessions_1.user_sessions.updateOne({
+            user_id: UserObjectId,
+            socket_id: socket_id,
+        }, {
+            $set: {
+                chat_room_id: screen_status === true || screen_status === "true"
+                    ? chatRoomObjectId
+                    : null,
+            },
+        }, { new: true });
+        console.log("the result----------------", result);
+        // if (screen_status === "true" || screen_status === true) {
+        //   await user_sessions.updateOne(
+        //     {
+        //       user_id: UserObjectId,
+        //       socket_id: socket_id,
+        //     },
+        //     {
+        //       $set: {
+        //         chat_room_id: chatRoomObjectId,
+        //       },
+        //     },
+        //     { new: true },
+        //   );
+        // } else {
+        //   await user_sessions.updateOne(
+        //     {
+        //       user_id: UserObjectId,
+        //       socket_id: socket_id,
+        //     },
+        //     {
+        //       $set: {
+        //         chat_room_id: null,
+        //       },
+        //     },
+        //     { new: true },
+        //   );
+        // }
+        console.log(`updated user session`, typeof user_id);
         return (0, response_functions_1.socketSuccessRes)("Screen status changed successfully", []);
     }
     catch (error) {
