@@ -94,6 +94,8 @@ export interface deleteMessageData {
   chat_room_id: string;
   chat_id: string;
   user_id: string;
+  sender_id: string;
+  receiver_id: string;
   ln?: string;
 }
 

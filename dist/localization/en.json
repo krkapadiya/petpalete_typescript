@@ -31,5 +31,19 @@
 	"Service media uploaded successfully.": "Service media uploaded successfully.",
 	"Successfully updated service data.": "Successfully updated service data.",
 	"Services list get successfully.": "Services list get successfully.",
-	"Service favorites list get successfully.": "Service favorites list get successfully."
+	"Service favorites list get successfully.": "Service favorites list get successfully.",
+	"User signup successfully.": "User signup successfully.",
+	"Socket id set successfully!": "Socket id set successfully!",
+	"User session not found": "User session not found",
+	"User is online in other device": "User is online in other device",
+	"Chat room created successfully": "Chat room created successfully",
+	"Message sent successfully": "Message sent successfully",
+	"chat room data get successfully": "chat room data get successfully",
+	"Messages get successfully": "Messages get successfully",
+	"Message edited successfully": "Message edited successfully",
+	"Message not find": "Message not find",
+	"You do not have permission to edit this message": "You do not have permission to edit this message",
+	"You do not have permission to delete this message": "You do not have permission to delete this message",
+	"Chat deleted successfully": "Chat deleted successfully",
+	"Messages read successfully": "Messages read successfully"
 }

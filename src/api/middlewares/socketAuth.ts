@@ -1,63 +1,69 @@
-// import jwt from "jsonwebtoken";
-// import dotenv from "dotenv";
-// dotenv.config();
-// import { users } from "./../model/model.users";
-// import { user_sessions } from "./../model/model.user_sessions";
-// import { Socket } from "socket.io";
-// import { NextFunction } from "express";
-// interface JwtPayload {
-//   id: string;
-// }
+// socket-auth.ts
+import { Socket } from "socket.io";
+import jwt from "jsonwebtoken";
+import { users } from "../../api/model/model.users";
+import { user_sessions } from "../../api/model/model.user_sessions";
+import { IUser } from "../../api/model/model.users";
 
-// export const socketAuth = async (socket: Socket, next: NextFunction) => {
-//   try {
-//     const bearerHeader = socket.handshake.headers["authorization"];
+type IAuthenticatedUser = Omit<IUser, keyof Document> & { token: string };
 
-//     if (!bearerHeader) {
-//       return next(new Error("A token is required for authentication."));
-//     }
+export type AuthSocket = Socket & {
+  user?: IAuthenticatedUser;
+};
 
-//     const bearerToken = bearerHeader.startsWith("Bearer ")
-//       ? bearerHeader.split(" ")[1]
-//       : bearerHeader;
+export const socketAuth = async (
+  socket: AuthSocket,
+  next: (err?: Error) => void,
+): Promise<void> => {
+  try {
+    const bearerHeader = socket.handshake.headers.authorization as
+      | string
+      | undefined;
 
-//     const findUserSession = await user_sessions.find({
-//       auth_token: bearerToken,
-//     });
+    if (!bearerHeader) {
+      return next(new Error("A token is required for authentication."));
+    }
 
-//     if (!findUserSession) {
-//       return next(new Error("Authentication failed."));
-//     }
+    const bearerToken = bearerHeader.startsWith("Bearer ")
+      ? bearerHeader.split(" ")[1]
+      : bearerHeader;
 
-//     const decoded = jwt.verify(
-//       bearerToken,
-//       process.env.TOKEN_KEY as string,
-//     ) as JwtPayload;
-//     const { id } = decoded;
+    const activeSession = await user_sessions.findOne({
+      auth_token: bearerToken,
+    });
+    if (!activeSession) {
+      return next(new Error("Authentication failed."));
+    }
 
-//     const findUser = await users.findOne({
-//       _id: id,
-//       is_deleted: false,
-//     });
+    const { id } = jwt.verify(bearerToken, process.env.TOKEN_KEY as string) as {
+      id: string;
+    };
 
-//     if (!findUser) {
-//       return next(new Error("Authentication failed."));
-//     }
+    const user = await users
+      .findOne({ _id: id, is_deleted: false })
+      .lean()
+      .exec();
 
-//     if (findUser.is_blocked_by_admin) {
-//       return next(new Error("Your account has been blocked by the admin."));
-//     }
+    if (!user) {
+      return next(new Error("Authentication failed."));
+    }
 
-//     // Attach user info to socket
-//     socket.user = findUser;
-//     socket.user.token = bearerToken;
+    const isBlocked =
+      user.is_blocked_by_admin === true ||
+      String(user.is_blocked_by_admin) === "true";
 
-//     next();
-//   } catch (error) {
-//     console.log(
-//       "Socket JWT Error:",
-//       error instanceof Error ? error.message : String(error),
-//     );
-//     return next(new Error("Authentication failed."));
-//   }
-// };
+    if (isBlocked) {
+      return next(new Error("Your account has been blocked by the admin."));
+    }
+
+    socket.user = {
+      ...user,
+      token: bearerToken,
+    };
+
+    next();
+  } catch (err) {
+    console.error("Socket JWT Error:", (err as Error).message);
+    next(new Error("Authentication failed."));
+  }
+};

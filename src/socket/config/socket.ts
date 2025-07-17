@@ -1,26 +1,29 @@
-import { Server as HTTPServer } from "http";
-import { Server as HTTPSServer } from "https";
-import { Server as SocketIOServer, Namespace } from "socket.io";
+// socket/config/socket.ts
+import { Server as HttpServer } from "http";
+import { Server as HttpsServer } from "https";
+import { Server as IOServer, Socket } from "socket.io";
+import { IUser } from "../../api/model/model.users";
 
-type ServerType = HTTPServer | HTTPSServer;
+let ioInstance: IOServer | null = null;
 
-let ioInstance: SocketIOServer | null = null;
+const socket = {
+  init(server: HttpServer | HttpsServer): IOServer {
+    ioInstance = new IOServer(server, {
+      cors: { origin: "*", methods: ["GET", "POST"] },
+    });
+    return ioInstance;
+  },
 
-export const init = (server: ServerType): SocketIOServer => {
-  ioInstance = new SocketIOServer(server, {
-    cors: {
-      origin: "*",
-      methods: ["GET", "POST"],
-    },
-  });
-  return ioInstance;
+  getIO(): IOServer {
+    if (!ioInstance) {
+      throw new Error("Socket.io not initialized!");
+    }
+    return ioInstance;
+  },
 };
 
-export const getIO = (): SocketIOServer => {
-  if (!ioInstance) {
-    throw new Error("Socket.IO instance has not been initialised!");
-  }
-  return ioInstance;
+export type SocketWithUser = Socket & {
+  user?: IUser;
 };
 
-export type SocketIONamespace = Namespace;
+export default socket;

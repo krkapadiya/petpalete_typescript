@@ -22,7 +22,12 @@ export interface SetSocketIdData {
 
 export interface DisconnectSocketData {
   socket_id: string;
+  user_id: string;
   ln?: string;
+}
+export interface disconnectResponse {
+  success: boolean;
+  [key: string]: unknown;
 }
 
 export interface checkUserIsOnlineData {

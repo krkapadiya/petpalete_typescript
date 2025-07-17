@@ -17,7 +17,10 @@
     "prettier"
   ],
   "rules": {
-    "@typescript-eslint/no-unused-vars": ["error"],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
     "@typescript-eslint/explicit-module-boundary-types": "off",
     // "@typescript-eslint/no-explicit-any": "off",
     "no-console": "error",
@@ -25,5 +28,5 @@
     "prettier/prettier": "error",
     "strict": ["error", "global"]
   },
-  "ignorePatterns": ["dist", "node_modules"] // ✅ Ignore dist/ explicitly
+  "ignorePatterns": ["dist", "node_modules"]
 }
