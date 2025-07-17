@@ -1,12 +1,12 @@
 import { removeFile } from "./../../util/remove_file";
 import { errorRes } from "./../../util/response_functions";
 import { Request, Response, NextFunction } from "express";
-import type { File as MulterFile } from "multer";
+// import type { File as MulterFile } from "multer";
 
-interface FileRequest extends Request {
-  files?: MulterFile[] | { [fieldname: string]: MulterFile[] };
-  body: Record<string, unknown>;
-}
+// interface FileRequest extends Request {
+//   files?: MulterFile[] | { [fieldname: string]: MulterFile[] };
+//   body: Record<string, unknown>;
+// }
 
 interface SchemaValidator {
   validate: (
@@ -17,7 +17,7 @@ interface SchemaValidator {
 
 export const validateRequest = (schema: SchemaValidator) => {
   return async (
-    req: FileRequest,
+    req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
