@@ -11,7 +11,8 @@
     "start": "concurrently \"npm:build:watch\" \"npm:serve\"",
     "lint": "eslint src/**/*.ts --fix",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky install"
   },
   "author": "",
   "license": "ISC",
@@ -42,7 +43,6 @@
     "express-fileupload": "^1.5.2",
     "firebase-admin": "^13.4.0",
     "googleapis": "^150.0.1",
-    "husky": "^9.1.7",
     "i18n": "^0.15.1",
     "init": "^0.1.2",
     "joi": "^17.13.3",
