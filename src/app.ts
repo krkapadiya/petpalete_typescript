@@ -7,7 +7,6 @@ import cors from "cors";
 import http from "http";
 import i18n from "i18n";
 import app_router from "./api/route/app/v1/index.route";
-import socket from "./socket/config/socket";
 
 import { maintenanceMode } from "./util/response_functions";
 
